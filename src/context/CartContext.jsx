@@ -174,17 +174,53 @@ export const CartProvider = ({ children }) => {
               balanceAdj -= oldVal;
             }
 
-            const lookupKey = `${ticket.type}_${ticket.pos}`;
-            const targetNum = String(winningCombos[lookupKey] || '');
-            const isWinner = String(ticket.num || '') === targetNum;
+            let isWinner = false;
+            let winAmt = 0;
+            const ticketNum = String(ticket.num || '');
+
+            if (ticket.type === '4D') {
+              // 4D Cascading Logic: XABC -> ABC -> BC -> C
+              if (ticketNum === winningCombos['4D_XABC']) {
+                isWinner = true;
+                winAmt = Number(res.prizes?.['4D']?.XABC || 0);
+              } else if (ticketNum.slice(-3) === winningCombos['3D_ABC']) {
+                isWinner = true;
+                winAmt = Number(res.prizes?.['3D']?.ABC || 0);
+              } else if (ticketNum.slice(-2) === winningCombos['2D_BC']) {
+                isWinner = true;
+                winAmt = Number(res.prizes?.['2D']?.BC || 0);
+              } else if (ticketNum.slice(-1) === winningCombos['1D_C']) {
+                isWinner = true;
+                winAmt = Number(res.prizes?.['1D']?.C || 0);
+              }
+            } else if (ticket.type === '3D') {
+              // 3D Cascading Logic: ABC -> BC -> C
+              if (ticketNum === winningCombos['3D_ABC']) {
+                isWinner = true;
+                winAmt = Number(res.prizes?.['3D']?.ABC || 0);
+              } else if (ticketNum.slice(-2) === winningCombos['2D_BC']) {
+                isWinner = true;
+                winAmt = Number(res.prizes?.['2D']?.BC || 0);
+              } else if (ticketNum.slice(-1) === winningCombos['1D_C']) {
+                isWinner = true;
+                winAmt = Number(res.prizes?.['1D']?.C || 0);
+              }
+            } else {
+              // Standard 1D/2D Positional Logic
+              const lookupKey = `${ticket.type}_${ticket.pos}`;
+              const targetNum = String(winningCombos[lookupKey] || '');
+              isWinner = ticketNum === targetNum;
+              if (isWinner) {
+                winAmt = Number(res.prizes?.[ticket.type]?.[ticket.pos] || 0);
+              }
+            }
             
             const ticketRef = doc(db, 'tickets', String(ticket.id));
             if (isWinner) {
-              const baseP = res.prizes?.[ticket.type]?.[ticket.pos] || 0;
-              const wAmt = Number(baseP) * Number(ticket.qty || 1);
-              balanceAdj += wAmt;
+              const totalPayout = winAmt * Number(ticket.qty || 1);
+              balanceAdj += totalPayout;
               batch.update(ticketRef, { 
-                status: 'Won', prize: `₹ ${wAmt}`, 
+                status: 'Won', prize: `₹ ${totalPayout}`, 
                 processedBy: res.id, payoutDate: serverTimestamp() 
               });
             } else {

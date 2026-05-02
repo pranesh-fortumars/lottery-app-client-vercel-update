@@ -248,27 +248,33 @@ const AdminAnnouncements = () => {
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                         <div className="bg-gray-50/50 p-5 rounded-2xl border border-gray-100 space-y-4">
-                            <p className="text-[9px] font-black text-red-500 uppercase tracking-widest">1D Prizes</p>
+                            <p className="text-[9px] font-black text-red-500 uppercase tracking-widest">1D / Consolation Pool</p>
                             {['A', 'B', 'C'].map(p => (
                             <div key={p} className="flex items-center justify-between gap-2">
-                                <span className="text-[10px] font-black text-gray-400 italic">{p}</span>
+                                <span className="text-[10px] font-black text-gray-400 italic">{p === 'C' ? 'C (3D: 3rd / 4D: 4th)' : p}</span>
                                 <input type="number" value={prizeConfigs['1D'][p]} onChange={(e) => setPrizeConfigs({...prizeConfigs, '1D': {...prizeConfigs['1D'], [p]: e.target.value}})} className="w-20 bg-white border border-gray-200 rounded-lg py-1 px-2 text-xs font-black" />
                             </div>
                             ))}
                         </div>
                         <div className="bg-gray-50/50 p-5 rounded-2xl border border-gray-100 space-y-4">
-                            <p className="text-[9px] font-black text-red-500 uppercase tracking-widest">2D Prizes</p>
+                            <p className="text-[9px] font-black text-red-500 uppercase tracking-widest">2D / Mid-Tier Pool</p>
                             {['AB', 'BC', 'AC'].map(p => (
                             <div key={p} className="flex items-center justify-between gap-2">
-                                <span className="text-[10px] font-black text-gray-400 italic">{p}</span>
+                                <span className="text-[10px] font-black text-gray-400 italic">{p === 'BC' ? 'BC (3D: 2nd / 4D: 3rd)' : p}</span>
                                 <input type="number" value={prizeConfigs['2D'][p]} onChange={(e) => setPrizeConfigs({...prizeConfigs, '2D': {...prizeConfigs['2D'], [p]: e.target.value}})} className="w-20 bg-white border border-gray-200 rounded-lg py-1 px-2 text-xs font-black" />
                             </div>
                             ))}
                         </div>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
-                        <div className="bg-gray-50/50 p-5 rounded-2xl border border-gray-100"><p className="text-[9px] font-black text-red-500 uppercase mb-3">3D Prize</p><input type="number" value={prizeConfigs['3D'].ABC} onChange={(e) => setPrizeConfigs({...prizeConfigs, '3D': {...prizeConfigs['3D'], ABC: e.target.value}})} className="w-full bg-white border border-gray-200 rounded-lg py-3 px-4 text-sm font-black" /></div>
-                        <div className="bg-gray-50/50 p-5 rounded-2xl border border-gray-100"><p className="text-[9px] font-black text-red-500 uppercase mb-3">4D Prize</p><input type="number" value={prizeConfigs['4D'].XABC} onChange={(e) => setPrizeConfigs({...prizeConfigs, '4D': {...prizeConfigs['4D'], XABC: e.target.value}})} className="w-full bg-white border border-gray-200 rounded-lg py-3 px-4 text-sm font-black" /></div>
+                        <div className="bg-gray-50/50 p-5 rounded-2xl border border-gray-100">
+                            <p className="text-[9px] font-black text-red-500 uppercase mb-3">ABC (3D: 1st / 4D: 2nd)</p>
+                            <input type="number" value={prizeConfigs['3D'].ABC} onChange={(e) => setPrizeConfigs({...prizeConfigs, '3D': {...prizeConfigs['3D'], ABC: e.target.value}})} className="w-full bg-white border border-gray-200 rounded-lg py-3 px-4 text-sm font-black" />
+                        </div>
+                        <div className="bg-gray-50/50 p-5 rounded-2xl border border-gray-100">
+                            <p className="text-[9px] font-black text-red-500 uppercase mb-3">XABC (4D: 1st Prize)</p>
+                            <input type="number" value={prizeConfigs['4D'].XABC} onChange={(e) => setPrizeConfigs({...prizeConfigs, '4D': {...prizeConfigs['4D'], XABC: e.target.value}})} className="w-full bg-white border border-gray-200 rounded-lg py-3 px-4 text-sm font-black" />
+                        </div>
                     </div>
                     <button onClick={handleDeclareResult} className="w-full bg-[#ff0000] text-white py-5 rounded-[1.5rem] font-black text-sm uppercase tracking-widest shadow-2xl active:scale-95 transition-all">DECLARE RESULT & PAYOUT</button>
                </div>
