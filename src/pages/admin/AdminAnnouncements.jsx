@@ -57,12 +57,22 @@ const AdminAnnouncements = () => {
   // 4-Column Result Entry
   const [resultDigits, setResultDigits] = useState({ X: '', A: '', B: '', C: '' });
 
-  // Prize Rewards Configuration
+  // Prize Rewards Configuration (Tier-Based)
   const [prizeConfigs, setPrizeConfigs] = useState({
     '1D': { A: '100', B: '100', C: '100' },
-    '2D': { AB: '500', BC: '500', AC: '500' },
-    '3D': { ABC: '2000' },
-    '4D': { XABC: '10000' }
+    '2D': { AB: '1000', BC: '1000', AC: '1000' },
+    '3D': {
+      '12': { ABC: '6250', BC: '250', C: '25' },
+      '28': { ABC: '15000', BC: '500', C: '50' },
+      '30': { ABC: '17500', BC: '500', C: '50' },
+      '55': { ABC: '30000', BC: '1000', C: '100' },
+      '60': { ABC: '35000', BC: '1000', C: '100' }
+    },
+    '4D': {
+      '20': { XABC: '100000', ABC: '0', BC: '0', C: '0' },
+      '50': { XABC: '250000', ABC: '5000', BC: '500', C: '50' },
+      '100': { XABC: '500000', ABC: '10000', BC: '1000', C: '100' }
+    }
   });
 
   const drawAssignments = {
@@ -246,34 +256,87 @@ const AdminAnnouncements = () => {
                         </div>
                         ))}
                     </div>
+                    {/* 1D & 2D Pools */}
                     <div className="grid grid-cols-2 gap-4">
                         <div className="bg-gray-50/50 p-5 rounded-2xl border border-gray-100 space-y-4">
-                            <p className="text-[9px] font-black text-red-500 uppercase tracking-widest">1D / Consolation Pool</p>
+                            <p className="text-[9px] font-black text-red-500 uppercase tracking-widest">1D Board Prizes</p>
                             {['A', 'B', 'C'].map(p => (
                             <div key={p} className="flex items-center justify-between gap-2">
-                                <span className="text-[10px] font-black text-gray-400 italic">{p === 'C' ? 'C (3D: 3rd / 4D: 4th)' : p}</span>
+                                <span className="text-[10px] font-black text-gray-400 italic">{p} Board</span>
                                 <input type="number" value={prizeConfigs['1D'][p]} onChange={(e) => setPrizeConfigs({...prizeConfigs, '1D': {...prizeConfigs['1D'], [p]: e.target.value}})} className="w-20 bg-white border border-gray-200 rounded-lg py-1 px-2 text-xs font-black" />
                             </div>
                             ))}
                         </div>
                         <div className="bg-gray-50/50 p-5 rounded-2xl border border-gray-100 space-y-4">
-                            <p className="text-[9px] font-black text-red-500 uppercase tracking-widest">2D / Mid-Tier Pool</p>
+                            <p className="text-[9px] font-black text-red-500 uppercase tracking-widest">2D Board Prizes</p>
                             {['AB', 'BC', 'AC'].map(p => (
                             <div key={p} className="flex items-center justify-between gap-2">
-                                <span className="text-[10px] font-black text-gray-400 italic">{p === 'BC' ? 'BC (3D: 2nd / 4D: 3rd)' : p}</span>
+                                <span className="text-[10px] font-black text-gray-400 italic">{p} Combo</span>
                                 <input type="number" value={prizeConfigs['2D'][p]} onChange={(e) => setPrizeConfigs({...prizeConfigs, '2D': {...prizeConfigs['2D'], [p]: e.target.value}})} className="w-20 bg-white border border-gray-200 rounded-lg py-1 px-2 text-xs font-black" />
                             </div>
                             ))}
                         </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="bg-gray-50/50 p-5 rounded-2xl border border-gray-100">
-                            <p className="text-[9px] font-black text-red-500 uppercase mb-3">ABC (3D: 1st / 4D: 2nd)</p>
-                            <input type="number" value={prizeConfigs['3D'].ABC} onChange={(e) => setPrizeConfigs({...prizeConfigs, '3D': {...prizeConfigs['3D'], ABC: e.target.value}})} className="w-full bg-white border border-gray-200 rounded-lg py-3 px-4 text-sm font-black" />
+
+                    {/* 3D Tiered Prizes */}
+                    <div className="space-y-4">
+                        <p className="text-[10px] font-black text-gray-900 uppercase tracking-widest ml-2 italic">3D Tier Configuration</p>
+                        <div className="grid grid-cols-1 gap-3">
+                            {Object.keys(prizeConfigs['3D']).map(tier => (
+                                <div key={tier} className="bg-gray-50/50 p-4 rounded-2xl border border-gray-100 flex items-center justify-between gap-4">
+                                    <div className="shrink-0"><span className="text-xs font-black text-red-600">₹{tier}</span></div>
+                                    <div className="flex gap-2 overflow-x-auto pb-1">
+                                        {['ABC', 'BC', 'C'].map(pos => (
+                                            <div key={pos} className="flex flex-col items-center">
+                                                <label className="text-[8px] font-black text-gray-400 uppercase mb-1">{pos}</label>
+                                                <input 
+                                                    type="number" 
+                                                    value={prizeConfigs['3D'][tier][pos]} 
+                                                    onChange={(e) => setPrizeConfigs({
+                                                        ...prizeConfigs, 
+                                                        '3D': {
+                                                            ...prizeConfigs['3D'], 
+                                                            [tier]: { ...prizeConfigs['3D'][tier], [pos]: e.target.value }
+                                                        }
+                                                    })} 
+                                                    className="w-16 bg-white border border-gray-200 rounded-lg py-1 px-2 text-[10px] font-black text-center" 
+                                                />
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            ))}
                         </div>
-                        <div className="bg-gray-50/50 p-5 rounded-2xl border border-gray-100">
-                            <p className="text-[9px] font-black text-red-500 uppercase mb-3">XABC (4D: 1st Prize)</p>
-                            <input type="number" value={prizeConfigs['4D'].XABC} onChange={(e) => setPrizeConfigs({...prizeConfigs, '4D': {...prizeConfigs['4D'], XABC: e.target.value}})} className="w-full bg-white border border-gray-200 rounded-lg py-3 px-4 text-sm font-black" />
+                    </div>
+
+                    {/* 4D Tiered Prizes */}
+                    <div className="space-y-4">
+                        <p className="text-[10px] font-black text-gray-900 uppercase tracking-widest ml-2 italic">4D Tier Configuration</p>
+                        <div className="grid grid-cols-1 gap-3">
+                            {Object.keys(prizeConfigs['4D']).map(tier => (
+                                <div key={tier} className="bg-gray-50/50 p-4 rounded-2xl border border-gray-100 flex items-center justify-between gap-4">
+                                    <div className="shrink-0"><span className="text-xs font-black text-red-600">₹{tier}</span></div>
+                                    <div className="flex gap-2 overflow-x-auto pb-1">
+                                        {['XABC', 'ABC', 'BC', 'C'].map(pos => (
+                                            <div key={pos} className="flex flex-col items-center">
+                                                <label className="text-[8px] font-black text-gray-400 uppercase mb-1">{pos}</label>
+                                                <input 
+                                                    type="number" 
+                                                    value={prizeConfigs['4D'][tier][pos]} 
+                                                    onChange={(e) => setPrizeConfigs({
+                                                        ...prizeConfigs, 
+                                                        '4D': {
+                                                            ...prizeConfigs['4D'], 
+                                                            [tier]: { ...prizeConfigs['4D'][tier], [pos]: e.target.value }
+                                                        }
+                                                    })} 
+                                                    className="w-16 bg-white border border-gray-200 rounded-lg py-1 px-2 text-[10px] font-black text-center" 
+                                                />
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     </div>
                     <button onClick={handleDeclareResult} className="w-full bg-[#ff0000] text-white py-5 rounded-[1.5rem] font-black text-sm uppercase tracking-widest shadow-2xl active:scale-95 transition-all">DECLARE RESULT & PAYOUT</button>

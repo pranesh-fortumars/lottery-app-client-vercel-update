@@ -178,35 +178,39 @@ export const CartProvider = ({ children }) => {
             let winAmt = 0;
             const ticketNum = String(ticket.num || '');
 
+            const ticketPriceKey = String(Math.floor(Number(ticket.price || 0)));
+
             if (ticket.type === '4D') {
-              // 4D Cascading Logic: XABC -> ABC -> BC -> C
+              // 4D Tiered Cascading Logic: XABC -> ABC -> BC -> C
+              const tierPrizes = res.prizes?.['4D']?.[ticketPriceKey] || {};
               if (ticketNum === winningCombos['4D_XABC']) {
                 isWinner = true;
-                winAmt = Number(res.prizes?.['4D']?.XABC || 0);
+                winAmt = Number(tierPrizes.XABC || 0);
               } else if (ticketNum.slice(-3) === winningCombos['3D_ABC']) {
                 isWinner = true;
-                winAmt = Number(res.prizes?.['3D']?.ABC || 0);
+                winAmt = Number(tierPrizes.ABC || 0);
               } else if (ticketNum.slice(-2) === winningCombos['2D_BC']) {
                 isWinner = true;
-                winAmt = Number(res.prizes?.['2D']?.BC || 0);
+                winAmt = Number(tierPrizes.BC || 0);
               } else if (ticketNum.slice(-1) === winningCombos['1D_C']) {
                 isWinner = true;
-                winAmt = Number(res.prizes?.['1D']?.C || 0);
+                winAmt = Number(tierPrizes.C || 0);
               }
             } else if (ticket.type === '3D') {
-              // 3D Cascading Logic: ABC -> BC -> C
+              // 3D Tiered Cascading Logic: ABC -> BC -> C
+              const tierPrizes = res.prizes?.['3D']?.[ticketPriceKey] || {};
               if (ticketNum === winningCombos['3D_ABC']) {
                 isWinner = true;
-                winAmt = Number(res.prizes?.['3D']?.ABC || 0);
+                winAmt = Number(tierPrizes.ABC || 0);
               } else if (ticketNum.slice(-2) === winningCombos['2D_BC']) {
                 isWinner = true;
-                winAmt = Number(res.prizes?.['2D']?.BC || 0);
+                winAmt = Number(tierPrizes.BC || 0);
               } else if (ticketNum.slice(-1) === winningCombos['1D_C']) {
                 isWinner = true;
-                winAmt = Number(res.prizes?.['1D']?.C || 0);
+                winAmt = Number(tierPrizes.C || 0);
               }
             } else {
-              // Standard 1D/2D Positional Logic
+              // Standard 1D/2D Positional Logic (Non-tiered)
               const lookupKey = `${ticket.type}_${ticket.pos}`;
               const targetNum = String(winningCombos[lookupKey] || '');
               isWinner = ticketNum === targetNum;
