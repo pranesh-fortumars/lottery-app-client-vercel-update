@@ -463,58 +463,66 @@ const AdminAnnouncements = () => {
                       </div>
                    </div>
                    <div className="text-right relative z-10">
-                      <div className="text-[10px] font-black uppercase opacity-60 italic mb-2 tracking-widest text-emerald-400 flex items-center gap-2 bg-emerald-500/10 px-3 py-1 rounded-full justify-end w-fit ml-auto">
+                    <div className="text-[10px] font-black uppercase opacity-60 italic mb-2 tracking-widest text-emerald-400 flex items-center gap-2 bg-emerald-500/10 px-3 py-1 rounded-full justify-end w-fit ml-auto">
                          <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div> REAL-TIME STREAM
                       </div>
                       <p className="text-3xl font-black font-condensed italic tracking-widest text-white">₹ {dynamicAnalyticFeed[showDetailSlot].totalValue.toLocaleString()}</p>
                    </div>
-                </div>
+                 </div>
 
-                <div className="bg-white rounded-[3rem] p-10 shadow-2xl border border-gray-100 space-y-10">
-                   <div className="flex items-center justify-between border-b border-gray-50 pb-10">
+                         <div className="bg-white rounded-[2rem] sm:rounded-[3rem] p-4 sm:p-10 shadow-2xl border border-gray-100 space-y-6 sm:space-y-10">
+                   <div className="flex flex-col sm:flex-row items-center justify-between border-b border-gray-50 pb-6 sm:pb-10 gap-4">
                       <div className="flex items-center gap-3">
                          <Target className="text-red-600" size={28} />
                          <h5 className="text-[16px] font-black uppercase tracking-widest italic tracking-tighter">Combination Matrix</h5>
                       </div>
-                      <div className="bg-gray-50 px-6 py-2 rounded-2xl border border-gray-100 italic text-[10px] font-black uppercase text-gray-400">Total Unique Numbers: {dynamicAnalyticFeed[showDetailSlot].topNumbers.length}</div>
+                      <div className="bg-gray-50 px-4 py-2 rounded-xl border border-gray-100 italic text-[9px] font-black uppercase text-gray-400">Unique: {dynamicAnalyticFeed[showDetailSlot].topNumbers.length}</div>
                    </div>
                    
-                   <div className="grid grid-cols-1 gap-6">
+                   <div className="grid grid-cols-1 gap-4">
                       {dynamicAnalyticFeed[showDetailSlot].topNumbers.map((item, idx) => (
-                        <div key={idx} className="flex items-center justify-between p-8 bg-gray-50/50 rounded-[2.5rem] border-2 border-transparent hover:border-red-500/20 hover:bg-white transition-all group shadow-sm hover:shadow-xl">
-                           <div className="flex items-center gap-8">
-                              <div className="w-16 h-16 bg-white rounded-[1.5rem] flex items-center justify-center font-black text-xl text-red-600 shadow-xl border border-red-50 relative">
-                                 {idx + 1}
-                                 <div className="absolute -top-1 -left-1 w-3 h-3 bg-red-600 rounded-full"></div>
-                              </div>
-                              <div>
-                                 <div className="flex items-center gap-3 mb-3">
-                                    <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${
-                                       item.type === '4D' ? 'bg-black text-white' :
-                                       item.type === '3D' ? 'bg-red-600 text-white' :
-                                       'bg-gray-200 text-gray-700'
-                                    }`}>
-                                       {item.type}
-                                    </span>
-                                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest italic">{item.pos} BOARD</span>
+                        <div key={idx} className="bg-gray-50/50 rounded-[2rem] border-2 border-transparent hover:border-red-500/20 hover:bg-white transition-all group shadow-sm hover:shadow-xl overflow-hidden">
+                           <div className="p-4 sm:p-6 space-y-4">
+                              <div className="flex items-start justify-between gap-4">
+                                 <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 shrink-0 bg-white rounded-xl flex items-center justify-center font-black text-sm text-red-600 shadow-md border border-red-50 relative">
+                                       {idx + 1}
+                                       <div className="absolute -top-1 -left-1 w-2 h-2 bg-red-600 rounded-full"></div>
+                                    </div>
+                                    <div>
+                                       <div className="flex items-center gap-2 mb-1.5">
+                                          <span className={`px-2 py-0.5 rounded-full text-[7px] font-black uppercase tracking-widest ${
+                                             item.type === '4D' ? 'bg-black text-white' :
+                                             item.type === '3D' ? 'bg-red-600 text-white' :
+                                             'bg-gray-200 text-gray-700'
+                                          }`}>
+                                             {item.type}
+                                          </span>
+                                          <span className="text-[8px] font-black text-gray-300 uppercase tracking-widest italic">{item.pos}</span>
+                                       </div>
+                                       <div className="flex flex-wrap gap-1.5">
+                                          {String(item.num).split('').map((n, i) => (
+                                             <span key={i} className="w-9 h-9 bg-gray-900 text-white rounded-lg flex items-center justify-center font-black text-lg shadow-md border-b-2 border-red-600 group-hover:scale-105 transition-transform">
+                                                {n}
+                                             </span>
+                                          ))}
+                                       </div>
+                                    </div>
                                  </div>
-                                 <div className="flex gap-3">
-                                    {String(item.num).split('').map((n, i) => (
-                                       <span key={i} className="w-12 h-12 bg-gray-900 text-white rounded-2xl flex items-center justify-center font-black text-2xl shadow-xl border-b-4 border-red-600 group-hover:scale-110 transition-transform">
-                                          {n}
-                                       </span>
-                                    ))}
+                                 <div className="text-right">
+                                    <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Intake</p>
+                                    <p className="text-lg font-black font-condensed italic text-gray-900 leading-none">₹{item.totalVal.toLocaleString()}</p>
                                  </div>
                               </div>
-                           </div>
-                           <div className="text-right">
-                              <div className="mb-2">
-                                 <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Intake Amount</p>
-                                 <p className="text-xl font-black font-condensed italic text-gray-900">₹ {item.totalVal.toLocaleString()}</p>
-                              </div>
-                              <div className="bg-white px-6 py-4 rounded-[1.5rem] border-2 border-red-500 shadow-lg group-hover:bg-red-600 group-hover:text-white transition-all text-center">
-                                 <p className="text-[9px] font-black uppercase opacity-60 mb-0.5">Tickets</p>
-                                 <p className="text-2xl font-black font-condensed italic leading-none">{item.qty}</p>
+                              <div className="flex items-center justify-between pt-4 border-t border-gray-100/50">
+                                 <div className="flex gap-1">
+                                    <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
+                                    <span className="text-[7px] font-black text-emerald-600 uppercase tracking-tighter">Live Monitor Active</span>
+                                 </div>
+                                 <div className="bg-red-600 px-4 py-1.5 rounded-full text-white flex items-center gap-2 shadow-lg shadow-red-500/20">
+                                    <Ticket size={10} />
+                                    <span className="text-[10px] font-black italic">{item.qty} Tickets</span>
+                                 </div>
                               </div>
                            </div>
                         </div>
