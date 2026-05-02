@@ -35,18 +35,29 @@ import {
   Maximize2,
   List,
   Target,
-  Hash
+  Hash,
+  Save
 } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 
 const AdminAnnouncements = () => {
-  const { purchasedTickets, addResult, declaredResults } = useCart();
+  const { purchasedTickets, addResult, declaredResults, prizeScheme, updateScheme } = useCart();
   const [activeTab, setActiveTab] = useState('dispatch'); 
   
   // Workflow Navigation State
   const [workflowStep, setWorkflowStep] = useState('root'); 
   const [marketSelection, setMarketSelection] = useState(null); 
   const [selectedSlot, setSelectedSlot] = useState(null);
+
+  // Scheme Editing State
+  const [localScheme, setLocalScheme] = useState(null);
+
+  // Sync localScheme with global prizeScheme
+  useEffect(() => {
+    if (prizeScheme && !localScheme) {
+      setLocalScheme(JSON.parse(JSON.stringify(prizeScheme)));
+    }
+  }, [prizeScheme]);
 
   // Monitor Detail State
   const [showDetailSlot, setShowDetailSlot] = useState(null);
@@ -56,24 +67,6 @@ const AdminAnnouncements = () => {
 
   // 4-Column Result Entry
   const [resultDigits, setResultDigits] = useState({ X: '', A: '', B: '', C: '' });
-
-  // Prize Rewards Configuration (Tier-Based)
-  const [prizeConfigs, setPrizeConfigs] = useState({
-    '1D': { A: '100', B: '100', C: '100' },
-    '2D': { AB: '1000', BC: '1000', AC: '1000' },
-    '3D': {
-      '12': { ABC: '6250', BC: '250', C: '25' },
-      '28': { ABC: '15000', BC: '500', C: '50' },
-      '30': { ABC: '17500', BC: '500', C: '50' },
-      '55': { ABC: '30000', BC: '1000', C: '100' },
-      '60': { ABC: '35000', BC: '1000', C: '100' }
-    },
-    '4D': {
-      '20': { XABC: '100000', ABC: '0', BC: '0', C: '0' },
-      '50': { XABC: '250000', ABC: '5000', BC: '500', C: '50' },
-      '100': { XABC: '500000', ABC: '10000', BC: '1000', C: '100' }
-    }
-  });
 
   const drawAssignments = {
     'DEAR': ['01:00 PM', '06:00 PM', '08:00 PM'],
@@ -152,18 +145,29 @@ const AdminAnnouncements = () => {
     const today = new Date().toISOString().split('T')[0];
     
     if (X === '' || A === '' || B === '' || C === '') return alert("Please enter all result digits.");
-    
+    if (!prizeScheme) return alert("Prize scheme not loaded. Please wait.");
+
     addResult({ 
       draw: selectedSlot, 
       date: today,
       brand: marketSelection === 'DEAR' ? 'DEARLOT' : 'KERELALOT', 
       digits: resultDigits, 
-      prizes: prizeConfigs 
+      prizes: prizeScheme 
     });
     
     alert(`RESULT ANNOUNCED: ${X}${A}${B}${C}`);
     setWorkflowStep('root');
     setResultDigits({ X: '', A: '', B: '', C: '' });
+  };
+
+  const handleSaveScheme = async () => {
+    const success = await updateScheme(localScheme);
+    if (success) {
+      alert("Prize scheme updated successfully!");
+      setWorkflowStep('root');
+    } else {
+      alert("Failed to update scheme.");
+    }
   };
 
   const exportToPDF = () => alert("Preparing PDF Report...");
@@ -192,12 +196,112 @@ const AdminAnnouncements = () => {
                   <div className="w-16 h-16 bg-red-50 rounded-2xl flex items-center justify-center text-[#ff0000] group-hover:scale-110 shadow-lg shadow-red-500/10"><Trophy size={32} /></div>
                   <p className="text-xl font-black font-condensed tracking-tighter uppercase italic">Result</p>
                </button>
-               <button className="bg-white rounded-[2.5rem] shadow-2xl border-2 border-transparent opacity-30 cursor-not-allowed flex flex-col items-center justify-center space-y-4">
-                  <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-500"><Layout size={32} /></div>
+               <button onClick={() => setWorkflowStep('scheme')} className="bg-white rounded-[2.5rem] shadow-2xl border-2 border-transparent hover:border-blue-500 flex flex-col items-center justify-center space-y-4 group">
+                  <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-500 group-hover:scale-110 shadow-lg shadow-blue-500/10"><Layout size={32} /></div>
                   <p className="text-xl font-black font-condensed tracking-tighter uppercase italic">Scheme</p>
                </button>
             </div>
           )}
+
+          {workflowStep === 'scheme' && localScheme && (
+            <div className="animate-in slide-in-from-bottom-6 duration-500 space-y-6">
+                <div className="bg-gray-900 rounded-3xl p-6 text-white flex justify-between items-center border-l-[10px] border-blue-500">
+                  <div className="flex items-center gap-4">
+                     <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center text-blue-500"><Layout size={24} /></div>
+                     <div><p className="text-[9px] font-black uppercase opacity-60 tracking-[.2em]">Global Setting</p><h2 className="text-2xl font-black font-condensed italic">PRIZE SCHEME</h2></div>
+                  </div>
+                  <button onClick={() => setWorkflowStep('root')} className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center hover:bg-gray-500 transition-colors"><Trash2 size={18} /></button>
+               </div>
+
+               <div className="bg-white rounded-[2.5rem] p-8 shadow-2xl border border-gray-100 space-y-8">
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="bg-gray-50/50 p-5 rounded-2xl border border-gray-100 space-y-4">
+                            <p className="text-[9px] font-black text-blue-500 uppercase tracking-widest">1D Board Prizes</p>
+                            {['A', 'B', 'C'].map(p => (
+                            <div key={p} className="flex items-center justify-between gap-2">
+                                <span className="text-[10px] font-black text-gray-400 italic">{p} Board</span>
+                                <input type="number" value={localScheme['1D'][p]} onChange={(e) => setLocalScheme({...localScheme, '1D': {...localScheme['1D'], [p]: e.target.value}})} className="w-20 bg-white border border-gray-200 rounded-lg py-1 px-2 text-xs font-black" />
+                            </div>
+                            ))}
+                        </div>
+                        <div className="bg-gray-50/50 p-5 rounded-2xl border border-gray-100 space-y-4">
+                            <p className="text-[9px] font-black text-blue-500 uppercase tracking-widest">2D Board Prizes</p>
+                            {['AB', 'BC', 'AC'].map(p => (
+                            <div key={p} className="flex items-center justify-between gap-2">
+                                <span className="text-[10px] font-black text-gray-400 italic">{p} Combo</span>
+                                <input type="number" value={localScheme['2D'][p]} onChange={(e) => setLocalScheme({...localScheme, '2D': {...localScheme['2D'], [p]: e.target.value}})} className="w-20 bg-white border border-gray-200 rounded-lg py-1 px-2 text-xs font-black" />
+                            </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="space-y-4">
+                        <p className="text-[10px] font-black text-gray-900 uppercase tracking-widest ml-2 italic">3D Tier Configuration</p>
+                        <div className="grid grid-cols-1 gap-3">
+                            {Object.keys(localScheme['3D']).map(tier => (
+                                <div key={tier} className="bg-gray-50/50 p-4 rounded-2xl border border-gray-100 flex items-center justify-between gap-4">
+                                    <div className="shrink-0"><span className="text-xs font-black text-blue-600">₹{tier}</span></div>
+                                    <div className="flex gap-2 overflow-x-auto pb-1">
+                                        {['ABC', 'BC', 'C'].map(pos => (
+                                            <div key={pos} className="flex flex-col items-center">
+                                                <label className="text-[8px] font-black text-gray-400 uppercase mb-1">{pos}</label>
+                                                <input 
+                                                    type="number" 
+                                                    value={localScheme['3D'][tier][pos]} 
+                                                    onChange={(e) => setLocalScheme({
+                                                        ...localScheme, 
+                                                        '3D': {
+                                                            ...localScheme['3D'], 
+                                                            [tier]: { ...localScheme['3D'][tier], [pos]: e.target.value }
+                                                        }
+                                                    })} 
+                                                    className="w-16 bg-white border border-gray-200 rounded-lg py-1 px-2 text-[10px] font-black text-center" 
+                                                />
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="space-y-4">
+                        <p className="text-[10px] font-black text-gray-900 uppercase tracking-widest ml-2 italic">4D Tier Configuration</p>
+                        <div className="grid grid-cols-1 gap-3">
+                            {Object.keys(localScheme['4D']).map(tier => (
+                                <div key={tier} className="bg-gray-50/50 p-4 rounded-2xl border border-gray-100 flex items-center justify-between gap-4">
+                                    <div className="shrink-0"><span className="text-xs font-black text-blue-600">₹{tier}</span></div>
+                                    <div className="flex gap-2 overflow-x-auto pb-1">
+                                        {['XABC', 'ABC', 'BC', 'C'].map(pos => (
+                                            <div key={pos} className="flex flex-col items-center">
+                                                <label className="text-[8px] font-black text-gray-400 uppercase mb-1">{pos}</label>
+                                                <input 
+                                                    type="number" 
+                                                    value={localScheme['4D'][tier][pos]} 
+                                                    onChange={(e) => setLocalScheme({
+                                                        ...localScheme, 
+                                                        '4D': {
+                                                            ...localScheme['4D'], 
+                                                            [tier]: { ...localScheme['4D'][tier], [pos]: e.target.value }
+                                                        }
+                                                    })} 
+                                                    className="w-16 bg-white border border-gray-200 rounded-lg py-1 px-2 text-[10px] font-black text-center" 
+                                                />
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <button onClick={handleSaveScheme} className="w-full bg-blue-600 text-white py-5 rounded-[1.5rem] font-black text-sm uppercase tracking-widest shadow-2xl active:scale-95 transition-all flex items-center justify-center gap-2">
+                        <Save size={18} /> SAVE SCHEME
+                    </button>
+               </div>
+            </div>
+          )}
+
           {workflowStep === 'market' && (
             <div className="animate-in slide-in-from-right-4 space-y-6 bg-white p-8 rounded-[2.5rem] shadow-2xl">
                <div className="flex justify-between items-center pb-6 border-b border-gray-50">
@@ -256,89 +360,13 @@ const AdminAnnouncements = () => {
                         </div>
                         ))}
                     </div>
-                    {/* 1D & 2D Pools */}
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="bg-gray-50/50 p-5 rounded-2xl border border-gray-100 space-y-4">
-                            <p className="text-[9px] font-black text-red-500 uppercase tracking-widest">1D Board Prizes</p>
-                            {['A', 'B', 'C'].map(p => (
-                            <div key={p} className="flex items-center justify-between gap-2">
-                                <span className="text-[10px] font-black text-gray-400 italic">{p} Board</span>
-                                <input type="number" value={prizeConfigs['1D'][p]} onChange={(e) => setPrizeConfigs({...prizeConfigs, '1D': {...prizeConfigs['1D'], [p]: e.target.value}})} className="w-20 bg-white border border-gray-200 rounded-lg py-1 px-2 text-xs font-black" />
-                            </div>
-                            ))}
-                        </div>
-                        <div className="bg-gray-50/50 p-5 rounded-2xl border border-gray-100 space-y-4">
-                            <p className="text-[9px] font-black text-red-500 uppercase tracking-widest">2D Board Prizes</p>
-                            {['AB', 'BC', 'AC'].map(p => (
-                            <div key={p} className="flex items-center justify-between gap-2">
-                                <span className="text-[10px] font-black text-gray-400 italic">{p} Combo</span>
-                                <input type="number" value={prizeConfigs['2D'][p]} onChange={(e) => setPrizeConfigs({...prizeConfigs, '2D': {...prizeConfigs['2D'], [p]: e.target.value}})} className="w-20 bg-white border border-gray-200 rounded-lg py-1 px-2 text-xs font-black" />
-                            </div>
-                            ))}
-                        </div>
+                    
+                    <div className="p-6 bg-red-50 rounded-2xl border border-red-100 text-center space-y-2">
+                        <ShieldCheck size={24} className="mx-auto text-red-600" />
+                        <p className="text-[10px] font-black uppercase text-red-800 tracking-widest">Automatic Prize Allocation</p>
+                        <p className="text-[9px] font-bold text-gray-400">The current prize scheme will be applied automatically based on the digits entered above.</p>
                     </div>
 
-                    {/* 3D Tiered Prizes */}
-                    <div className="space-y-4">
-                        <p className="text-[10px] font-black text-gray-900 uppercase tracking-widest ml-2 italic">3D Tier Configuration</p>
-                        <div className="grid grid-cols-1 gap-3">
-                            {Object.keys(prizeConfigs['3D']).map(tier => (
-                                <div key={tier} className="bg-gray-50/50 p-4 rounded-2xl border border-gray-100 flex items-center justify-between gap-4">
-                                    <div className="shrink-0"><span className="text-xs font-black text-red-600">₹{tier}</span></div>
-                                    <div className="flex gap-2 overflow-x-auto pb-1">
-                                        {['ABC', 'BC', 'C'].map(pos => (
-                                            <div key={pos} className="flex flex-col items-center">
-                                                <label className="text-[8px] font-black text-gray-400 uppercase mb-1">{pos}</label>
-                                                <input 
-                                                    type="number" 
-                                                    value={prizeConfigs['3D'][tier][pos]} 
-                                                    onChange={(e) => setPrizeConfigs({
-                                                        ...prizeConfigs, 
-                                                        '3D': {
-                                                            ...prizeConfigs['3D'], 
-                                                            [tier]: { ...prizeConfigs['3D'][tier], [pos]: e.target.value }
-                                                        }
-                                                    })} 
-                                                    className="w-16 bg-white border border-gray-200 rounded-lg py-1 px-2 text-[10px] font-black text-center" 
-                                                />
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* 4D Tiered Prizes */}
-                    <div className="space-y-4">
-                        <p className="text-[10px] font-black text-gray-900 uppercase tracking-widest ml-2 italic">4D Tier Configuration</p>
-                        <div className="grid grid-cols-1 gap-3">
-                            {Object.keys(prizeConfigs['4D']).map(tier => (
-                                <div key={tier} className="bg-gray-50/50 p-4 rounded-2xl border border-gray-100 flex items-center justify-between gap-4">
-                                    <div className="shrink-0"><span className="text-xs font-black text-red-600">₹{tier}</span></div>
-                                    <div className="flex gap-2 overflow-x-auto pb-1">
-                                        {['XABC', 'ABC', 'BC', 'C'].map(pos => (
-                                            <div key={pos} className="flex flex-col items-center">
-                                                <label className="text-[8px] font-black text-gray-400 uppercase mb-1">{pos}</label>
-                                                <input 
-                                                    type="number" 
-                                                    value={prizeConfigs['4D'][tier][pos]} 
-                                                    onChange={(e) => setPrizeConfigs({
-                                                        ...prizeConfigs, 
-                                                        '4D': {
-                                                            ...prizeConfigs['4D'], 
-                                                            [tier]: { ...prizeConfigs['4D'][tier], [pos]: e.target.value }
-                                                        }
-                                                    })} 
-                                                    className="w-16 bg-white border border-gray-200 rounded-lg py-1 px-2 text-[10px] font-black text-center" 
-                                                />
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
                     <button onClick={handleDeclareResult} className="w-full bg-[#ff0000] text-white py-5 rounded-[1.5rem] font-black text-sm uppercase tracking-widest shadow-2xl active:scale-95 transition-all">DECLARE RESULT & PAYOUT</button>
                </div>
             </div>
@@ -425,7 +453,7 @@ const AdminAnnouncements = () => {
              </div>
            ) : (
              <div className="space-y-6 animate-in slide-in-from-right-4">
-                <div className="bg-gray-950 rounded-[3rem] p-10 text-white flex justify-between items-center shadow-2xl relative overflow-hidden border-b-8 border-red-600">
+                <div className="bg-gray-900 rounded-[3rem] p-10 text-white flex justify-between items-center shadow-2xl relative overflow-hidden border-b-8 border-red-600">
                    <div className="absolute top-0 right-0 w-64 h-64 bg-red-600/10 rounded-full blur-3xl"></div>
                    <div className="flex items-center gap-6 relative z-10">
                       <button onClick={() => setShowDetailSlot(null)} className="w-14 h-14 bg-white/5 rounded-2xl flex items-center justify-center hover:bg-white/10 border border-white/5 transition-all"><ChevronRight size={32} className="rotate-180" /></button>

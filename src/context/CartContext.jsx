@@ -12,7 +12,8 @@ import {
   serverTimestamp,
   getDocs,
   writeBatch,
-  increment
+  increment,
+  setDoc
 } from 'firebase/firestore';
 import { db } from '../firebase';
 
@@ -32,6 +33,7 @@ export const CartProvider = ({ children }) => {
   const [purchasedTickets, setPurchasedTickets] = useState([]);
   const [declaredResults, setDeclaredResults] = useState([]);
   const [notifications, setNotifications] = useState([]);
+  const [prizeScheme, setPrizeScheme] = useState(null);
   const [loading, setLoading] = useState(true);
 
   // --- Subscriptions ---
@@ -43,7 +45,32 @@ export const CartProvider = ({ children }) => {
       return;
     }
 
-    // Combined Subscription for Tickets and Notifications to avoid multiple listeners
+    // Subscribe to Global Prize Scheme
+    const unsubscribeScheme = onSnapshot(doc(db, 'settings', 'prizeScheme'), (snapshot) => {
+      if (snapshot.exists()) {
+        setPrizeScheme(snapshot.data());
+      } else {
+        // Initialize default scheme if missing
+        const defaultScheme = {
+          '1D': { A: '100', B: '100', C: '100' },
+          '2D': { AB: '1000', BC: '1000', AC: '1000' },
+          '3D': {
+            '12': { ABC: '6250', BC: '250', C: '25' },
+            '28': { ABC: '15000', BC: '500', C: '50' },
+            '30': { ABC: '17500', BC: '500', C: '50' },
+            '55': { ABC: '30000', BC: '1000', C: '100' },
+            '60': { ABC: '35000', BC: '1000', C: '100' }
+          },
+          '4D': {
+            '20': { XABC: '100000', ABC: '0', BC: '0', C: '0' },
+            '50': { XABC: '250000', ABC: '5000', BC: '500', C: '50' },
+            '100': { XABC: '500000', ABC: '10000', BC: '1000', C: '100' }
+          }
+        };
+        setPrizeScheme(defaultScheme);
+      }
+    });
+
     const unsubscribeTickets = onSnapshot(collection(db, 'tickets'), (snapshot) => {
       const allTickets = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
       // Admin sees everything; User sees only their own
@@ -103,11 +130,28 @@ export const CartProvider = ({ children }) => {
 
     setLoading(false);
     return () => {
+      unsubscribeScheme();
       unsubscribeTickets();
       unsubscribeResults();
       unsubscribeNotifs();
     };
   }, [user]);
+
+  const updateScheme = async (newScheme) => {
+    try {
+      await updateDoc(doc(db, 'settings', 'prizeScheme'), newScheme);
+      return true;
+    } catch (e) {
+      // If doc doesn't exist, set it
+      try {
+        await setDoc(doc(db, 'settings', 'prizeScheme'), newScheme);
+        return true;
+      } catch (err) {
+        console.error("Scheme update failed:", err);
+        return false;
+      }
+    }
+  };
 
   const [lastAnnouncement, setLastAnnouncement] = useState(null);
   const ticketsRef = useRef([]);
@@ -388,7 +432,8 @@ export const CartProvider = ({ children }) => {
     <CartContext.Provider value={{ 
       cart, addToCart, removeFromCart, clearCart, confirmPurchase,
       cartTotal, purchasedTickets, declaredResults, addResult, lastAnnouncement,
-      notifications, markAllRead, addNotification, loading, refreshTickets
+      notifications, markAllRead, addNotification, loading, refreshTickets,
+      prizeScheme, updateScheme
     }}>
       {children}
     </CartContext.Provider>
