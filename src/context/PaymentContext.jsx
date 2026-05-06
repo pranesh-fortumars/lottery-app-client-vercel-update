@@ -14,6 +14,7 @@ export const usePayment = () => {
 
 export const PaymentProvider = ({ children }) => {
   const [activePayment, setActivePayment] = useState(null);
+  const [paymentConfig, setPaymentConfig] = useState({ mode: 'auto', manualAccountId: 1 });
   const [accounts, setAccounts] = useState([
     {
       id: 1,
@@ -29,30 +30,72 @@ export const PaymentProvider = ({ children }) => {
     }
   ]);
 
-  const calculateActiveAccount = () => {
-    // Base date for rotation: 2024-01-01
+  // Synchronize with Firestore Settings
+  useEffect(() => {
+    const unsubscribe = onSnapshot(doc(db, 'settings', 'payment'), (snapshot) => {
+      if (snapshot.exists()) {
+        setPaymentConfig(snapshot.data());
+      } else {
+        // Initialize if doesn't exist
+        setDoc(doc(db, 'settings', 'payment'), { mode: 'auto', manualAccountId: 1 });
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const calculateAutoAccount = () => {
     const baseDate = new Date('2024-01-01T00:00:00Z').getTime();
     const now = new Date().getTime();
     const diffDays = Math.floor((now - baseDate) / (1000 * 60 * 60 * 24));
-    
-    // Switch every 2 days
-    const rotationIndex = Math.floor(diffDays / 2) % 2;
+    const rotationIndex = Math.floor(diffDays / 2) % accounts.length;
     return accounts[rotationIndex];
   };
 
   useEffect(() => {
     const updateActiveAccount = () => {
-      setActivePayment(calculateActiveAccount());
+      if (paymentConfig.mode === 'manual') {
+        const manualAcc = accounts.find(a => a.id === paymentConfig.manualAccountId) || accounts[0];
+        setActivePayment(manualAcc);
+      } else {
+        setActivePayment(calculateAutoAccount());
+      }
     };
 
     updateActiveAccount();
-    // Check every hour to see if rotation happened
-    const interval = setInterval(updateActiveAccount, 3600000);
+    // Refresh every 30 mins for auto-rotation
+    const interval = setInterval(updateActiveAccount, 1800000);
     return () => clearInterval(interval);
-  }, []);
+  }, [paymentConfig, accounts]);
+
+  const setPaymentMode = async (mode) => {
+    try {
+      await setDoc(doc(db, 'settings', 'payment'), { ...paymentConfig, mode }, { merge: true });
+      return true;
+    } catch (error) {
+      console.error("Mode switch failed:", error);
+      return false;
+    }
+  };
+
+  const setManualAccount = async (accountId) => {
+    try {
+      await setDoc(doc(db, 'settings', 'payment'), { mode: 'manual', manualAccountId: accountId }, { merge: true });
+      return true;
+    } catch (error) {
+      console.error("Manual account set failed:", error);
+      return false;
+    }
+  };
 
   return (
-    <PaymentContext.Provider value={{ activePayment, accounts }}>
+    <PaymentContext.Provider value={{ 
+      activePayment, 
+      accounts, 
+      paymentConfig, 
+      setPaymentMode, 
+      setManualAccount 
+    }}>
       {children}
     </PaymentContext.Provider>
   );

@@ -20,7 +20,7 @@ import { usePayment } from '../../context/PaymentContext';
 
 const AdminSettings = () => {
   const [activeTab, setActiveTab] = useState('General');
-  const { accounts, activePayment } = usePayment();
+  const { accounts, activePayment, paymentConfig, setPaymentMode, setManualAccount } = usePayment();
 
   const tabs = [
     { id: 'General', icon: Box, label: 'General Info' },
@@ -113,27 +113,54 @@ const AdminSettings = () => {
          {activeTab === 'Financial' && (
            <div className="space-y-6">
              <div className="bg-amber-50 p-6 rounded-3xl border border-amber-100 mb-8">
-               <div className="flex gap-3 items-center mb-2">
-                 <AlertCircle className="text-amber-500" size={20} />
-                 <h4 className="text-[10px] font-black uppercase tracking-widest text-amber-900">Rotation Policy</h4>
+               <div className="flex justify-between items-center mb-2">
+                 <div className="flex gap-3 items-center">
+                   <AlertCircle className="text-amber-500" size={20} />
+                   <h4 className="text-[10px] font-black uppercase tracking-widest text-amber-900">Rotation Control</h4>
+                 </div>
+                 <div className="flex items-center gap-2">
+                    <span className="text-[8px] font-black uppercase text-amber-700">{paymentConfig.mode === 'auto' ? 'AUTOMATIC' : 'MANUAL OVERRIDE'}</span>
+                    <button 
+                      onClick={() => setPaymentMode(paymentConfig.mode === 'auto' ? 'manual' : 'auto')}
+                      className={`w-12 h-6 rounded-full relative transition-all ${paymentConfig.mode === 'auto' ? 'bg-emerald-500' : 'bg-orange-500'}`}
+                    >
+                       <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${paymentConfig.mode === 'auto' ? 'left-1' : 'left-7'}`}></div>
+                    </button>
+                 </div>
                </div>
                <p className="text-[10px] text-amber-800 font-bold leading-relaxed">
-                 Payment accounts rotate automatically every 2 days. The system selects the active account based on the current date relative to the base reference date.
+                 {paymentConfig.mode === 'auto' 
+                   ? 'The system rotates QR codes every 2 days automatically based on the global reference date.' 
+                   : 'Automatic rotation is PAUSED. You must manually select the active account below.'}
                </p>
              </div>
 
              <div className="grid grid-cols-1 gap-4">
                {accounts.map((acc) => {
                  const isActive = activePayment?.id === acc.id;
+                 const isManualTarget = paymentConfig.mode === 'manual' && paymentConfig.manualAccountId === acc.id;
+                 
                  return (
-                   <div key={acc.id} className={`p-6 rounded-[2rem] border-2 transition-all ${isActive ? 'bg-white border-[#ff004d] shadow-lg scale-105' : 'bg-gray-50 border-gray-100 opacity-60'}`}>
+                   <div 
+                     key={acc.id} 
+                     onClick={() => paymentConfig.mode === 'manual' && setManualAccount(acc.id)}
+                     className={`p-6 rounded-[2rem] border-2 transition-all cursor-pointer ${
+                       isActive 
+                         ? 'bg-white border-[#ff004d] shadow-lg scale-105' 
+                         : 'bg-gray-50 border-gray-100 opacity-60 hover:opacity-100'
+                     }`}
+                   >
                      <div className="flex justify-between items-start mb-4">
                        <div>
                          <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Account {acc.id}</p>
                          <h5 className="text-sm font-black text-gray-800 uppercase italic">{acc.bankName}</h5>
                        </div>
                        {isActive && (
-                         <span className="bg-[#ff004d] text-white text-[8px] font-black px-3 py-1 rounded-full uppercase tracking-widest shadow-lg -rotate-3">Active Now</span>
+                         <span className={`text-white text-[8px] font-black px-3 py-1 rounded-full uppercase tracking-widest shadow-lg -rotate-3 ${
+                           paymentConfig.mode === 'auto' ? 'bg-emerald-500' : 'bg-[#ff004d]'
+                         }`}>
+                           {paymentConfig.mode === 'auto' ? 'Auto-Active' : 'Manually Fixed'}
+                         </span>
                        )}
                      </div>
                      <div className="flex items-center gap-4 bg-gray-50/50 p-4 rounded-2xl border border-gray-100">
