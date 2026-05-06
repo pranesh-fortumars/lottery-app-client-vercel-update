@@ -147,7 +147,7 @@ const SelectionPage = () => {
                   title="Three Digits" 
                   digits={3} 
                   price={tier.price} 
-                  winText={`Win ${tier.win.split(',')[0]}`}
+                  winText={`Win ${tier.win}`}
                   gameName={getGameName()} 
                   drawTime={drawTime}
                   singleRow={true}
