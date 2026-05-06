@@ -83,11 +83,11 @@ const SelectionPage = () => {
         {/* Draw Status Banner */}
         <div className={`py-4 px-6 flex justify-between items-center shadow-lg border-b border-white/10 ${closed ? 'bg-black' : 'bg-gradient-to-r from-[#ff004d] to-[#ff4d6a]'}`}>
            <div>
-              <p className="text-white text-[10px] font-black uppercase tracking-[0.2em] opacity-80">{marketName} DRAW</p>
-              <h2 className="text-white text-2xl font-black font-condensed italic">{drawTime}</h2>
+              <p className="text-white text-[9px] font-black uppercase tracking-[0.2em] opacity-80">{marketName} DRAW</p>
+              <h2 className="text-white text-xl font-black font-condensed italic">{drawTime}</h2>
            </div>
            <div className="text-right">
-              <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-white shadow-inner ${closed ? 'text-black' : 'text-[#ff004d]'}`}>
+              <span className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest bg-white shadow-inner ${closed ? 'text-black' : 'text-[#ff004d]'}`}>
                 {closed ? 'EXPIRED' : 'OPEN'}
               </span>
            </div>
@@ -95,11 +95,11 @@ const SelectionPage = () => {
 
         <div className="p-4 space-y-4">
           <div className="flex gap-3">
-             <button onClick={() => navigate('/rules')} className="flex-1 bg-white border-2 border-gray-100 text-gray-900 py-3 rounded-2xl flex items-center justify-center gap-2 font-black shadow-sm uppercase tracking-tight text-xs hover:border-[#ff004d] transition-all">
-                <Gavel size={18} className="text-[#ff004d]" /> Rules
+             <button onClick={() => navigate('/rules')} className="flex-1 bg-white border-2 border-gray-100 text-gray-900 py-2.5 rounded-xl flex items-center justify-center gap-2 font-black shadow-sm uppercase tracking-tight text-[10px] hover:border-[#ff004d] transition-all">
+                <Gavel size={16} className="text-[#ff004d]" /> Rules
              </button>
-             <button onClick={() => navigate('/results')} className="flex-1 bg-white border-2 border-gray-100 text-gray-900 py-3 rounded-2xl flex items-center justify-center gap-2 font-black shadow-sm uppercase tracking-tight text-xs hover:border-[#ff004d] transition-all">
-                <ScrollText size={18} className="text-[#ff004d]" /> History
+             <button onClick={() => navigate('/results')} className="flex-1 bg-white border-2 border-gray-100 text-gray-900 py-2.5 rounded-xl flex items-center justify-center gap-2 font-black shadow-sm uppercase tracking-tight text-[10px] hover:border-[#ff004d] transition-all">
+                <ScrollText size={16} className="text-[#ff004d]" /> History
              </button>
           </div>
 
@@ -132,23 +132,51 @@ const SelectionPage = () => {
                 ]}
             />
             
-            {/* Triple Digit - ABC */}
-            <BettingCard 
-                title="Three Digits" 
-                digits={3} 
-                gameName={getGameName()} 
-                drawTime={drawTime}
-                priceOptions={abcTiers}
-            />
+            {/* Triple Digit - ABC (Split by Tier) */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 ml-2">
+                 <div className="w-4 h-4 bg-[#ff004d]/10 rounded-md flex items-center justify-center">
+                    <img src="https://img.icons8.com/fluency/48/000000/3-dots.png" alt="3D" className="w-2.5 h-2.5" onError={(e) => { e.target.style.display='none'; e.target.nextSibling.style.display='block'; }} />
+                    <div style={{display: 'none'}} className="w-1 h-1 bg-[#ff004d] rounded-full"></div>
+                 </div>
+                 <h4 className="text-[9px] font-black text-gray-400 uppercase tracking-widest">3D Pricing Categories</h4>
+              </div>
+              {abcTiers.map((tier, idx) => (
+                <BettingCard 
+                  key={`abc-${idx}`}
+                  title="Three Digits" 
+                  digits={3} 
+                  price={tier.price} 
+                  winText={`Win ${tier.win.split(',')[0]}`}
+                  gameName={getGameName()} 
+                  drawTime={drawTime}
+                  singleRow={true}
+                />
+              ))}
+            </div>
 
-            {/* 4D - XABC (Now available for both markets) */}
-            <BettingCard 
-                title="4D XABC" 
-                digits={4} 
-                gameName={getGameName()} 
-                drawTime={drawTime}
-                priceOptions={xabcTiers}
-            />
+            {/* 4D - XABC (Split by Tier) */}
+            <div className="space-y-4 pt-4 border-t border-gray-100">
+              <div className="flex items-center gap-2 ml-2">
+                 <div className="w-4 h-4 bg-black/10 rounded-md flex items-center justify-center">
+                    <img src="https://img.icons8.com/fluency/48/000000/number-4.png" alt="4D" className="w-2.5 h-2.5" onError={(e) => { e.target.style.display='none'; e.target.nextSibling.style.display='block'; }} />
+                    <div style={{display: 'none'}} className="w-1 h-1 bg-black rounded-full"></div>
+                 </div>
+                 <h4 className="text-[9px] font-black text-gray-400 uppercase tracking-widest">4D Pricing Categories</h4>
+              </div>
+              {xabcTiers.map((tier, idx) => (
+                <BettingCard 
+                  key={`xabc-${idx}`}
+                  title="4D XABC" 
+                  digits={4} 
+                  price={tier.price} 
+                  winText={`Win ${tier.win}`}
+                  gameName={getGameName()} 
+                  drawTime={drawTime}
+                  singleRow={true}
+                />
+              ))}
+            </div>
           </div>
           
           {closed && (
