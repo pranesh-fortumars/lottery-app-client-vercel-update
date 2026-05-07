@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import * as React from 'react';
 import { useAuth } from './AuthContext';
 import { 
   collection, 
@@ -17,10 +17,10 @@ import {
 } from 'firebase/firestore';
 import { db } from '../firebase';
 
-const CartContext = createContext();
+const CartContext = React.createContext();
 
 export const useCart = () => {
-  const context = useContext(CartContext);
+  const context = React.useContext(CartContext);
   if (!context) {
     throw new Error('useCart must be used within a CartProvider');
   }
@@ -29,15 +29,15 @@ export const useCart = () => {
 
 export const CartProvider = ({ children }) => {
   const { user } = useAuth();
-  const [cart, setCart] = useState([]);
-  const [purchasedTickets, setPurchasedTickets] = useState([]);
-  const [declaredResults, setDeclaredResults] = useState([]);
-  const [notifications, setNotifications] = useState([]);
-  const [prizeScheme, setPrizeScheme] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [cart, setCart] = React.useState([]);
+  const [purchasedTickets, setPurchasedTickets] = React.useState([]);
+  const [declaredResults, setDeclaredResults] = React.useState([]);
+  const [notifications, setNotifications] = React.useState([]);
+  const [prizeScheme, setPrizeScheme] = React.useState(null);
+  const [loading, setLoading] = React.useState(true);
 
   // --- Subscriptions ---
-  useEffect(() => {
+  React.useEffect(() => {
     if (!user) {
       setPurchasedTickets([]);
       setNotifications([]);
@@ -153,14 +153,14 @@ export const CartProvider = ({ children }) => {
     }
   };
 
-  const [lastAnnouncement, setLastAnnouncement] = useState(null);
-  const ticketsRef = useRef([]);
-  useEffect(() => { ticketsRef.current = purchasedTickets; }, [purchasedTickets]);
+  const [lastAnnouncement, setLastAnnouncement] = React.useState(null);
+  const ticketsRef = React.useRef([]);
+  React.useEffect(() => { ticketsRef.current = purchasedTickets; }, [purchasedTickets]);
 
   const processingResults = React.useRef(new Set());
 
   // Sync Engine: Triggers Payouts and Announcements when new results arrive
-  useEffect(() => {
+  React.useEffect(() => {
     if (!declaredResults || declaredResults.length === 0 || !user) return;
     
     // 📣 1. BROADCAST LATEST ANNOUNCEMENT
@@ -405,7 +405,7 @@ export const CartProvider = ({ children }) => {
 
   const cartTotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
 
-  const refreshTickets = useCallback(async () => {
+  const refreshTickets = React.useCallback(async () => {
     if (!user) return;
     setLoading(true);
     try {

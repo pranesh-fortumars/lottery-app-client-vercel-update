@@ -1,11 +1,11 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import * as React from 'react';
 import { db } from '../firebase';
 import { doc, onSnapshot, setDoc, getDoc } from 'firebase/firestore';
 
-const PaymentContext = createContext();
+const PaymentContext = React.createContext();
 
 export const usePayment = () => {
-  const context = useContext(PaymentContext);
+  const context = React.useContext(PaymentContext);
   if (!context) {
     throw new Error('usePayment must be used within a PaymentProvider');
   }
@@ -13,9 +13,9 @@ export const usePayment = () => {
 };
 
 export const PaymentProvider = ({ children }) => {
-  const [activePayment, setActivePayment] = useState(null);
-  const [paymentConfig, setPaymentConfig] = useState({ mode: 'auto', manualAccountId: 1 });
-  const [accounts, setAccounts] = useState([
+  const [activePayment, setActivePayment] = React.useState(null);
+  const [paymentConfig, setPaymentConfig] = React.useState({ mode: 'auto', manualAccountId: 1 });
+  const [accounts, setAccounts] = React.useState([
     {
       id: 1,
       upiId: 'smserode143-4@okicici',
@@ -31,7 +31,7 @@ export const PaymentProvider = ({ children }) => {
   ]);
 
   // Synchronize with Firestore Settings
-  useEffect(() => {
+  React.useEffect(() => {
     const unsubscribe = onSnapshot(doc(db, 'settings', 'payment'), (snapshot) => {
       if (snapshot.exists()) {
         setPaymentConfig(snapshot.data());
@@ -52,7 +52,7 @@ export const PaymentProvider = ({ children }) => {
     return accounts[rotationIndex];
   };
 
-  useEffect(() => {
+  React.useEffect(() => {
     const updateActiveAccount = () => {
       if (paymentConfig.mode === 'manual') {
         const manualAcc = accounts.find(a => a.id === paymentConfig.manualAccountId) || accounts[0];

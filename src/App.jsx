@@ -48,9 +48,6 @@ const LandingPage = () => {
 
 function App() {
   return (
-    <AuthProvider>
-    <PaymentProvider>
-    <CartProvider>
       <Router>
       <AnimatePresence mode="wait">
         <Routes>
@@ -90,9 +87,6 @@ function App() {
         </Routes>
       </AnimatePresence>
     </Router>
-    </CartProvider>
-    </PaymentProvider>
-    </AuthProvider>
   );
 }
 
