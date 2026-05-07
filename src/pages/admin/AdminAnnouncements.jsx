@@ -188,7 +188,51 @@ const AdminAnnouncements = () => {
     }
   };
 
-  const exportToPDF = () => alert("Preparing PDF Report...");
+  const exportToPDF = async () => {
+    try {
+      const { default: jsPDF } = await import('jspdf');
+      const { default: autoTable } = await import('jspdf-autotable');
+      
+      const doc = new jsPDF();
+      const reportDate = new Date(historyDate).toLocaleDateString();
+      
+      // Header
+      doc.setFontSize(22);
+      doc.setTextColor(255, 0, 77); // #ff004d
+      doc.text('LOTTERY OFFICIAL REPORT', 14, 22);
+      
+      doc.setFontSize(10);
+      doc.setTextColor(100);
+      doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 30);
+      doc.text(`Result Date: ${reportDate}`, 14, 35);
+      
+      // Horizontal Line
+      doc.setDrawColor(255, 0, 77);
+      doc.setLineWidth(0.5);
+      doc.line(14, 40, 196, 40);
+
+      const tableData = filteredHistory.map(res => [
+        res.draw,
+        res.brand === 'DEARLOT' ? 'DEAR LOTTERY' : 'KERALA LOTTERY',
+        res.number
+      ]);
+
+      autoTable(doc, {
+        startY: 50,
+        head: [['TIME SLOT', 'MARKET / BRAND', 'WINNING NUMBER']],
+        body: tableData,
+        headStyles: { fillColor: [255, 0, 77], textColor: 255, fontStyle: 'bold' },
+        alternateRowStyles: { fillColor: [245, 245, 245] },
+        styles: { fontSize: 10, cellPadding: 5 },
+        margin: { top: 50 }
+      });
+
+      doc.save(`Lottery_Report_${historyDate}.pdf`);
+    } catch (error) {
+      console.error("PDF Export Error:", error);
+      alert("Error generating PDF. Please ensure all libraries are loaded.");
+    }
+  };
 
   // Generate range for the grid
   const getNumberRange = () => {
