@@ -607,6 +607,68 @@ const AdminAnnouncements = () => {
                    </div>
                 </div>
 
+                {/* High-Frequency Analytics Table (Only for 4D) */}
+                {monitorType === '4D' && (
+                  <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden mb-8 animate-in slide-in-from-left duration-700">
+                    <div className="p-6 border-b border-gray-200 bg-red-50/30 flex items-center justify-between">
+                       <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 bg-red-600 rounded-lg flex items-center justify-center text-white shadow-lg shadow-red-500/20"><Zap size={20} /></div>
+                          <div>
+                             <h5 className="text-[14px] font-black uppercase tracking-widest italic leading-tight">High-Frequency 4D Analytics</h5>
+                             <p className="text-[9px] font-black text-red-600/60 uppercase tracking-widest mt-0.5">Top Purchased Combinations for this Slot</p>
+                          </div>
+                       </div>
+                    </div>
+                    
+                    <div className="overflow-x-auto">
+                       <table className="w-full text-left border-collapse border-2 border-gray-200">
+                          <thead className="bg-gray-100">
+                             <tr>
+                                <th className="px-6 py-4 text-[11px] font-black uppercase text-gray-600 tracking-widest border-2 border-gray-200 w-24">Rank</th>
+                                <th className="px-6 py-4 text-[11px] font-black uppercase text-gray-600 tracking-widest border-2 border-gray-200"># Combination</th>
+                             </tr>
+                          </thead>
+                          <tbody>
+                             {(() => {
+                                const boardData = dynamicAnalyticFeed[showDetailSlot]?.dataStore?.[monitorType]?.[monitorBoard] || {};
+                                const sortedCombos = Object.entries(boardData)
+                                  .filter(([_, count]) => count > 0)
+                                  .sort((a, b) => b[1] - a[1])
+                                  .slice(0, 15); // Top 15
+
+                                if (sortedCombos.length === 0) {
+                                  return (
+                                    <tr>
+                                      <td colSpan="2" className="px-6 py-12 text-center text-gray-300 italic text-[11px] font-black uppercase tracking-widest border-2 border-gray-200">
+                                        No high-frequency data available for this slot yet
+                                      </td>
+                                    </tr>
+                                  );
+                                }
+
+                                return sortedCombos.map(([num, count], index) => {
+                                  return (
+                                    <tr key={num} className="group hover:bg-red-50/10 transition-all">
+                                      <td className="px-6 py-4 border-2 border-gray-200">
+                                        <span className="w-8 h-8 rounded-lg bg-gray-950 text-white flex items-center justify-center font-black italic shadow-md">#{index + 1}</span>
+                                      </td>
+                                      <td className="px-6 py-4 border-2 border-gray-200">
+                                        <div className="flex gap-2">
+                                          {num.split('').map((d, i) => (
+                                            <span key={i} className="w-10 h-10 rounded-xl bg-white border-2 border-gray-100 flex items-center justify-center font-black text-xl italic text-gray-900 shadow-sm group-hover:border-red-600 transition-all">{d}</span>
+                                          ))}
+                                        </div>
+                                      </td>
+                                    </tr>
+                                  );
+                                });
+                             })()}
+                          </tbody>
+                       </table>
+                    </div>
+                  </div>
+                )}
+
                 {/* Detailed Monitoring Table */}
                 <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden mb-12">
                    <div className="p-6 border-b border-gray-200 flex flex-col sm:flex-row items-center justify-between bg-gray-50/50 gap-4">
