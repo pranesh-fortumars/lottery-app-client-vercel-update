@@ -154,8 +154,8 @@ const AdminAnnouncements = () => {
   }, [purchasedTickets, monitorDate]);
 
   const filteredHistory = useMemo(() => {
-    const d = new Date(historyDate).toLocaleDateString();
-    return declaredResults.filter(r => r.date === d);
+    // Both historyDate and res.date are in YYYY-MM-DD format
+    return declaredResults.filter(r => r.date === historyDate);
   }, [declaredResults, historyDate]);
 
   const handleDigitChange = (col, val) => { if (val.length <= 1) setResultDigits({ ...resultDigits, [col]: val }); };
@@ -687,28 +687,64 @@ const AdminAnnouncements = () => {
       )}
 
       {activeTab === 'history' && (
-        <div className="p-4 bg-white animate-in slide-in-from-bottom-4">
-           {/* Date Filter Implementation Same as Previous */}
-           <div className="flex items-center justify-between mb-8 border-b-2 border-red-100 pb-6 px-2">
-              <div className="flex flex-col gap-1">
-                 <label className="text-[8px] font-black uppercase tracking-widest text-[#ff0000]">Record Date</label>
-                 <input type="date" value={historyDate} onChange={(e) => setHistoryDate(e.target.value)} className="bg-transparent border-none font-black text-xl outline-none cursor-pointer" />
+        <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-500 max-w-4xl mx-auto">
+           {/* Date Filter Implementation - Refined Grid Layout */}
+           <div className="bg-white rounded-[2rem] p-4 shadow-xl border border-gray-100 grid grid-cols-1 md:grid-cols-[auto_1fr_auto] items-center gap-4">
+              <div className="w-12 h-12 bg-gray-950 rounded-xl flex items-center justify-center text-white shrink-0">
+                 <Calendar size={22} />
               </div>
-              <button onClick={exportToPDF} className="bg-[#ff0000] text-white px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center gap-2 shadow-lg shadow-red-100"><Download size={14} /> Download</button>
+              
+              <div className="flex flex-col">
+                 <p className="text-[8px] font-black uppercase tracking-[0.3em] text-[#ff0000] mb-0.5 italic">Record Archive</p>
+                 <input 
+                   type="date" 
+                   value={historyDate} 
+                   onChange={(e) => setHistoryDate(e.target.value)} 
+                   className="bg-transparent font-black text-lg outline-none cursor-pointer text-gray-950 p-0 border-none w-full min-w-[150px]" 
+                 />
+              </div>
+              
+              <button 
+                onClick={exportToPDF} 
+                className="bg-[#ff0000] text-white px-6 py-3.5 rounded-xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg shadow-red-500/20 active:scale-[0.98] transition-all whitespace-nowrap"
+              >
+                <Download size={16} /> Export Report
+              </button>
            </div>
-           <div className="space-y-6">
+
+           <div className="space-y-4 pb-20">
               {filteredHistory.length > 0 ? filteredHistory.map((res, i) => (
-                <div key={i} className="official-result-card relative transition-all animate-in slide-in-from-left duration-500">
-                  <table cellPadding="10">
-                    <tbody>
-                      <tr><td>Date</td><td>{res.date}</td></tr>
-                      <tr><td>Time</td><td>{res.draw}</td></tr>
-                      <tr><td>Lot Name</td><td>{res.brand}</td></tr>
-                      <tr><td>Winning Number</td><td><div className="flex items-center">{(res.number || "").split('').map((digit, idx) => (<span key={idx} className="result-circle">{digit}</span>))}</div></td></tr>
-                    </tbody>
-                  </table>
+                <div key={i} className="bg-white rounded-[2rem] p-6 border border-gray-100 shadow-lg flex items-center justify-between group hover:border-red-200 transition-all">
+                  <div className="flex items-center gap-6">
+                    <div className="w-16 h-16 bg-gray-50 rounded-2xl flex flex-col items-center justify-center border border-gray-100 shrink-0">
+                       <p className="text-[8px] font-black text-gray-400 uppercase leading-none mb-1">Time</p>
+                       <p className="text-xs font-black font-condensed italic text-gray-900">{res.draw}</p>
+                    </div>
+                    <div>
+                       <div className="flex items-center gap-2 mb-1">
+                          <Trophy size={12} className="text-red-500" />
+                          <p className="text-[10px] font-black text-gray-950 uppercase tracking-tighter">{res.brand === 'DEARLOT' ? 'DEAR LOTTERY' : 'KERALA LOTTERY'}</p>
+                       </div>
+                       <p className="text-[8px] font-bold text-gray-400 uppercase tracking-widest">Official Record ID: {res.id.toString().slice(-6)}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2">
+                    {(res.number || "").split('').map((digit, idx) => (
+                      <div key={idx} className="w-10 h-10 bg-gray-950 border-b-4 border-red-600 rounded-xl flex items-center justify-center text-white font-black text-xl italic shadow-md">
+                        {digit}
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              )) : <div className="text-center py-20 opacity-30 italic font-serif-official text-xl">Official Records Empty for this date.</div>}
+              )) : (
+                <div className="text-center py-20 bg-white rounded-[2.5rem] border-2 border-dashed border-gray-100">
+                   <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-300">
+                      <History size={40} />
+                   </div>
+                   <p className="text-sm font-black text-gray-300 uppercase tracking-[0.2em] italic">No Records found for this date</p>
+                </div>
+              )}
            </div>
         </div>
       )}
