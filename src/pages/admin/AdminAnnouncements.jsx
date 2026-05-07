@@ -64,6 +64,7 @@ const AdminAnnouncements = () => {
   const [monitorType, setMonitorType] = useState('1D');
   const [monitorBoard, setMonitorBoard] = useState('A');
   const [monitorSearch, setMonitorSearch] = useState('');
+  const [monitorDate, setMonitorDate] = useState(new Date().toISOString().split('T')[0]);
 
   const boardOptions = {
     '1D': ['A', 'B', 'C'],
@@ -108,7 +109,8 @@ const AdminAnnouncements = () => {
     const slots = Object.values(drawAssignments).flat();
     
     slots.forEach(s => {
-      const tickets = purchasedTickets.filter(t => t.draw === s);
+      // Filter by both Draw Time AND Selected Monitor Date
+      const tickets = purchasedTickets.filter(t => t.draw === s && t.purchaseDate === monitorDate);
       
       const combinationTable = {
         '1D': { A: 0, B: 0, C: 0 },
@@ -149,7 +151,7 @@ const AdminAnnouncements = () => {
       feed[s] = breakdown;
     });
     return feed;
-  }, [purchasedTickets]);
+  }, [purchasedTickets, monitorDate]);
 
   const filteredHistory = useMemo(() => {
     const d = new Date(historyDate).toLocaleDateString();
@@ -456,27 +458,44 @@ const AdminAnnouncements = () => {
       {activeTab === 'analysis' && (
         <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-500 max-w-4xl mx-auto">
            {!showDetailSlot ? (
-             <div className="space-y-8 pb-10">
-                {/* Compact Intelligence Header */}
-                <div className="bg-white rounded-[2rem] p-6 shadow-xl border border-red-50 relative overflow-hidden">
-                   <div className="absolute top-0 right-0 w-48 h-48 bg-red-50/50 rounded-full blur-3xl -mr-24 -mt-16"></div>
-                   <div className="relative z-10 flex justify-between items-center">
-                      <div className="flex items-center gap-4">
-                         <div className="w-14 h-14 bg-red-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-red-500/10"><BarChart3 size={28} /></div>
-                         <div>
-                            <h3 className="font-black text-2xl font-condensed italic uppercase tracking-tighter leading-none">Market Intel</h3>
-                            <div className="flex items-center gap-2 mt-1.5 bg-emerald-50 px-2 py-0.5 rounded-md w-fit">
-                               <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
-                               <span className="text-[8px] font-black text-emerald-600 uppercase tracking-widest">Live Terminal Active</span>
-                            </div>
-                         </div>
-                      </div>
-                      <div className="text-right">
-                         <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Network Volume</p>
-                         <p className="text-2xl font-black font-condensed italic text-gray-950">₹ {Object.values(dynamicAnalyticFeed).reduce((sum, d) => sum + (d.totalValue || 0), 0).toLocaleString()}</p>
-                      </div>
-                   </div>
-                </div>
+             <div className="space-y-8">
+                 {/* Compact Intelligence Header */}
+                 <div className="bg-white rounded-[2rem] p-6 shadow-xl border border-red-50 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-48 h-48 bg-red-50/50 rounded-full blur-3xl -mr-24 -mt-16"></div>
+                    <div className="relative z-10 flex flex-col lg:flex-row justify-between items-center gap-6">
+                       <div className="flex items-center gap-5 w-full lg:w-auto">
+                          <div className="w-14 h-14 bg-red-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-red-500/10 shrink-0"><BarChart3 size={28} /></div>
+                          <div>
+                             <h3 className="font-black text-2xl font-condensed italic uppercase tracking-tighter leading-none whitespace-nowrap">Market Intel</h3>
+                             <div className="flex items-center gap-2 mt-2 bg-emerald-50 px-3 py-1 rounded-lg w-fit">
+                                <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
+                                <span className="text-[9px] font-black text-emerald-600 uppercase tracking-widest">Live Terminal</span>
+                             </div>
+                          </div>
+                       </div>
+                       
+                       <div className="flex flex-col sm:flex-row items-center gap-6 w-full lg:w-auto justify-end">
+                          {/* Date Filter Integration */}
+                          <div className="flex items-center gap-3 bg-gray-50 p-3 px-5 rounded-2xl border border-gray-100 w-full sm:w-auto shadow-sm">
+                             <Calendar size={18} className="text-red-500 shrink-0" />
+                             <div className="flex flex-col">
+                                <label className="text-[7px] font-black uppercase text-gray-400 tracking-[0.2em] mb-0.5">Filter Date</label>
+                                <input 
+                                  type="date" 
+                                  value={monitorDate} 
+                                  onChange={(e) => setMonitorDate(e.target.value)} 
+                                  className="bg-transparent border-none font-black text-sm outline-none cursor-pointer text-gray-950 p-0" 
+                                />
+                             </div>
+                          </div>
+
+                          <div className="text-right shrink-0">
+                             <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Network Volume</p>
+                             <p className="text-2xl font-black font-condensed italic text-gray-950 leading-none">₹ {Object.values(dynamicAnalyticFeed).reduce((sum, d) => sum + (d.totalValue || 0), 0).toLocaleString()}</p>
+                          </div>
+                       </div>
+                    </div>
+                 </div>
 
                 {Object.keys(drawAssignments).map(mKey => (
                    <div key={mKey} className="space-y-4">
