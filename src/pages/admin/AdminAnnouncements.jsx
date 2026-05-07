@@ -61,6 +61,22 @@ const AdminAnnouncements = () => {
 
   // Monitor Detail State
   const [showDetailSlot, setShowDetailSlot] = useState(null);
+  const [monitorType, setMonitorType] = useState('1D');
+  const [monitorBoard, setMonitorBoard] = useState('A');
+  const [monitorSearch, setMonitorSearch] = useState('');
+
+  const boardOptions = {
+    '1D': ['A', 'B', 'C'],
+    '2D': ['AB', 'BC', 'AC'],
+    '3D': ['ABC'],
+    '4D': ['XABC']
+  };
+
+  useEffect(() => {
+    if (boardOptions[monitorType]) {
+      setMonitorBoard(boardOptions[monitorType][0]);
+    }
+  }, [monitorType]);
 
   // Result History Date Filter
   const [historyDate, setHistoryDate] = useState(new Date().toISOString().split('T')[0]);
@@ -108,24 +124,26 @@ const AdminAnnouncements = () => {
          else if (t.type === '4D') combinationTable['4D'].XABC += t.qty;
       });
 
-      // Frequency Map for specific numbers
-      const numFrequencies = {};
-      tickets.forEach(t => {
-        const key = `${t.type}_${t.pos}_${t.num}`;
-        if (!numFrequencies[key]) {
-           numFrequencies[key] = { num: t.num, type: t.type, pos: t.pos, qty: 0, totalVal: 0 };
-        }
-        numFrequencies[key].qty += t.qty;
-        numFrequencies[key].totalVal += (t.qty * t.price);
-      });
+      // Frequency Map for specific numbers - Categorized by Type and Board
+      const dataStore = {
+        '1D': { A: {}, B: {}, C: {} },
+        '2D': { AB: {}, BC: {}, AC: {} },
+        '3D': { ABC: {} },
+        '4D': { XABC: {} }
+      };
 
-      const sortedNumbers = Object.values(numFrequencies).sort((a, b) => b.qty - a.qty);
+      tickets.forEach(t => {
+        if (dataStore[t.type] && dataStore[t.type][t.pos]) {
+          const count = dataStore[t.type][t.pos][t.num] || 0;
+          dataStore[t.type][t.pos][t.num] = count + t.qty;
+        }
+      });
 
       const breakdown = {
         combinationTable,
+        dataStore,
         totalQty: tickets.reduce((sum, t) => sum + t.qty, 0),
         totalValue: tickets.reduce((sum, t) => sum + (t.qty * t.price), 0),
-        topNumbers: sortedNumbers,
         ready: isDrawFinished(s)
       };
       feed[s] = breakdown;
@@ -171,6 +189,23 @@ const AdminAnnouncements = () => {
   };
 
   const exportToPDF = () => alert("Preparing PDF Report...");
+
+  // Generate range for the grid
+  const getNumberRange = () => {
+    let max = 9;
+    if (monitorType === '2D') max = 99;
+    if (monitorType === '3D') max = 999;
+    if (monitorType === '4D') max = 9999;
+    
+    const digits = monitorType === '1D' ? 1 : monitorType === '2D' ? 2 : monitorType === '3D' ? 3 : 4;
+    const range = [];
+    for (let i = 0; i <= max; i++) {
+      const numStr = i.toString().padStart(digits, '0');
+      if (monitorSearch && !numStr.includes(monitorSearch)) continue;
+      range.push(numStr);
+    }
+    return range;
+  };
 
   return (
     <div className="space-y-8 p-4 pb-24 h-full bg-[#f8fbff] overflow-y-auto scrollbar-hide">
@@ -327,14 +362,14 @@ const AdminAnnouncements = () => {
                   {drawAssignments[marketSelection].map(slot => {
                     const stats = dynamicAnalyticFeed[slot];
                     return (
-                      <button key={slot} onClick={() => { setSelectedSlot(slot); setWorkflowStep('declare'); }} className={`p-5 rounded-2xl border flex justify-between items-center ${stats.ready ? 'bg-red-50 border-red-500 shadow-md' : 'bg-gray-50'}`}>
+                      <button key={slot} onClick={() => { setSelectedSlot(slot); setWorkflowStep('declare'); }} className={`p-5 rounded-2xl border flex justify-between items-center ${stats?.ready ? 'bg-red-50 border-red-500 shadow-md' : 'bg-gray-50'}`}>
                          <div className="flex items-center gap-3">
-                            {!stats.ready && <Lock size={14} className="text-gray-400" />}
+                            {!stats?.ready && <Lock size={14} className="text-gray-400" />}
                             <p className="text-lg font-black font-condensed italic">{slot}</p>
                          </div>
                          <div className="text-right">
-                            <p className={`text-[8px] font-black uppercase px-2 py-1 rounded-md ${stats.ready ? 'bg-red-500 text-white' : 'bg-gray-300 text-gray-600'}`}>{stats.ready ? 'READY TO DECLARE' : 'INTAKE OPEN'}</p>
-                            <p className="text-[9px] font-bold text-gray-400 mt-1 uppercase">Tickets: {stats.totalQty}</p>
+                            <p className={`text-[8px] font-black uppercase px-2 py-1 rounded-md ${stats?.ready ? 'bg-red-500 text-white' : 'bg-gray-300 text-gray-600'}`}>{stats?.ready ? 'READY TO DECLARE' : 'INTAKE OPEN'}</p>
+                            <p className="text-[9px] font-bold text-gray-400 mt-1 uppercase">Tickets: {stats?.totalQty || 0}</p>
                          </div>
                       </button>
                     );
@@ -375,7 +410,7 @@ const AdminAnnouncements = () => {
       )}
 
       {activeTab === 'analysis' && (
-        <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-500 max-w-2xl mx-auto">
+        <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-500 max-w-4xl mx-auto">
            {!showDetailSlot ? (
              <div className="space-y-8 pb-10">
                 {/* Compact Intelligence Header */}
@@ -394,7 +429,7 @@ const AdminAnnouncements = () => {
                       </div>
                       <div className="text-right">
                          <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Network Volume</p>
-                         <p className="text-2xl font-black font-condensed italic text-gray-950">₹ {Object.values(dynamicAnalyticFeed).reduce((sum, d) => sum + d.totalValue, 0).toLocaleString()}</p>
+                         <p className="text-2xl font-black font-condensed italic text-gray-950">₹ {Object.values(dynamicAnalyticFeed).reduce((sum, d) => sum + (d.totalValue || 0), 0).toLocaleString()}</p>
                       </div>
                    </div>
                 </div>
@@ -419,29 +454,29 @@ const AdminAnnouncements = () => {
                                         <div>
                                            <div className="flex items-center gap-2">
                                               <p className="text-xl font-black font-condensed italic leading-none">{slot}</p>
-                                              {data.totalQty > 0 && <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>}
+                                              {(data?.totalQty || 0) > 0 && <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>}
                                            </div>
                                            <p className="text-[8px] font-black text-gray-300 uppercase tracking-widest mt-1">ID: #{Math.floor(Math.random() * 9999)}</p>
                                         </div>
                                      </div>
                                      <div className="text-right">
                                         <p className="text-[9px] font-black text-[#ff0000] uppercase italic mb-0.5">COLLECTION</p>
-                                        <p className="text-2xl font-black font-condensed italic text-gray-950 leading-none">₹ {data.totalValue.toLocaleString()}</p>
+                                        <p className="text-2xl font-black font-condensed italic text-gray-950 leading-none">₹ {data?.totalValue?.toLocaleString() || 0}</p>
                                      </div>
                                   </div>
 
                                   <div className="grid grid-cols-3 gap-3 relative z-10">
                                      <div className="bg-gray-50/50 p-3.5 rounded-2xl border border-gray-100/50 flex flex-col items-center">
                                         <p className="text-[7px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Tickets</p>
-                                        <span className="text-lg font-black font-condensed italic text-gray-900">{data.totalQty}</span>
+                                        <span className="text-lg font-black font-condensed italic text-gray-900">{data?.totalQty || 0}</span>
                                      </div>
                                      <div className="bg-gray-50/50 p-3.5 rounded-2xl border border-gray-100/50 flex flex-col items-center">
-                                        <p className="text-[7px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Combos</p>
-                                        <span className="text-lg font-black font-condensed italic text-gray-900">{data.topNumbers.length}</span>
+                                        <p className="text-[7px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Boards</p>
+                                        <span className="text-lg font-black font-condensed italic text-gray-900">Active</span>
                                      </div>
                                      <div className="bg-gray-950 p-3.5 rounded-2xl flex flex-col items-center justify-center group-hover:bg-[#ff0000] transition-colors">
                                         <p className="text-[7px] font-black text-white/30 uppercase tracking-widest mb-0.5">Status</p>
-                                        <div className="text-white font-black text-[9px] uppercase tracking-widest">{data.ready ? 'STAGED' : 'INTAKE'}</div>
+                                        <div className="text-white font-black text-[9px] uppercase tracking-widest">{data?.ready ? 'STAGED' : 'INTAKE'}</div>
                                      </div>
                                   </div>
                                </div>
@@ -452,89 +487,141 @@ const AdminAnnouncements = () => {
                 ))}
              </div>
            ) : (
-             <div className="space-y-6 animate-in slide-in-from-right-4">
-                <div className="bg-gray-900 rounded-[3rem] p-10 text-white flex justify-between items-center shadow-2xl relative overflow-hidden border-b-8 border-red-600">
+             <div className="space-y-6 animate-in slide-in-from-right-4 pb-20">
+                {/* Header Section */}
+                <div className="bg-gray-900 rounded-[3rem] p-6 sm:p-10 text-white flex flex-col sm:flex-row justify-between items-center shadow-2xl relative overflow-hidden border-b-8 border-red-600 gap-6">
                    <div className="absolute top-0 right-0 w-64 h-64 bg-red-600/10 rounded-full blur-3xl"></div>
-                   <div className="flex items-center gap-6 relative z-10">
-                      <button onClick={() => setShowDetailSlot(null)} className="w-14 h-14 bg-white/5 rounded-2xl flex items-center justify-center hover:bg-white/10 border border-white/5 transition-all"><ChevronRight size={32} className="rotate-180" /></button>
+                   <div className="flex items-center gap-6 relative z-10 w-full sm:w-auto">
+                      <button onClick={() => setShowDetailSlot(null)} className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center hover:bg-white/10 border border-white/5 transition-all"><ChevronRight size={24} className="rotate-180" /></button>
                       <div>
-                         <p className="text-[11px] font-black uppercase text-red-500 tracking-[.3em] mb-2">Detailed Intake Analysis</p>
-                         <h4 className="text-4xl font-black font-condensed italic leading-none">{showDetailSlot}</h4>
+                         <p className="text-[9px] font-black uppercase text-red-500 tracking-[.3em] mb-1">Board Monitoring Terminal</p>
+                         <h4 className="text-3xl font-black font-condensed italic leading-none">{showDetailSlot}</h4>
                       </div>
                    </div>
-                   <div className="text-right relative z-10">
-                    <div className="text-[10px] font-black uppercase opacity-60 italic mb-2 tracking-widest text-emerald-400 flex items-center gap-2 bg-emerald-500/10 px-3 py-1 rounded-full justify-end w-fit ml-auto">
-                         <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div> REAL-TIME STREAM
+                   <div className="text-right relative z-10 w-full sm:w-auto flex sm:flex-col items-center sm:items-end justify-between">
+                      <div className="text-[8px] font-black uppercase opacity-60 italic tracking-widest text-emerald-400 flex items-center gap-2 bg-emerald-500/10 px-3 py-1 rounded-full w-fit">
+                         <div className="w-1 h-1 bg-emerald-500 rounded-full animate-pulse"></div> LIVE
                       </div>
-                      <p className="text-3xl font-black font-condensed italic tracking-widest text-white">₹ {dynamicAnalyticFeed[showDetailSlot].totalValue.toLocaleString()}</p>
+                      <p className="text-2xl font-black font-condensed italic tracking-widest text-white mt-2">₹ {dynamicAnalyticFeed[showDetailSlot]?.totalValue?.toLocaleString() || 0}</p>
                    </div>
-                 </div>
+                </div>
 
-                         <div className="bg-white rounded-[2rem] sm:rounded-[3rem] p-4 sm:p-10 shadow-2xl border border-gray-100 space-y-6 sm:space-y-10">
-                   <div className="flex flex-col sm:flex-row items-center justify-between border-b border-gray-50 pb-6 sm:pb-10 gap-4">
-                      <div className="flex items-center gap-3">
-                         <Target className="text-red-600" size={28} />
-                         <h5 className="text-[16px] font-black uppercase tracking-widest italic tracking-tighter">Combination Matrix</h5>
-                      </div>
-                      <div className="bg-gray-50 px-4 py-2 rounded-xl border border-gray-100 italic text-[9px] font-black uppercase text-gray-400">Unique: {dynamicAnalyticFeed[showDetailSlot].topNumbers.length}</div>
+                {/* Filter Bar */}
+                <div className="bg-white rounded-[2rem] p-4 shadow-xl border border-gray-100 flex flex-wrap gap-3 items-center justify-between sticky top-2 z-[90]">
+                   <div className="flex gap-2">
+                      {['1D', '2D', '3D', '4D'].map(type => (
+                         <button 
+                           key={type} 
+                           onClick={() => setMonitorType(type)}
+                           className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all ${monitorType === type ? 'bg-red-600 text-white shadow-lg' : 'bg-gray-100 text-gray-400'}`}
+                         >
+                            {type}
+                         </button>
+                      ))}
                    </div>
                    
-                   <div className="grid grid-cols-1 gap-4">
-                      {dynamicAnalyticFeed[showDetailSlot].topNumbers.map((item, idx) => (
-                        <div key={idx} className="bg-gray-50/50 rounded-[2rem] border-2 border-transparent hover:border-red-500/20 hover:bg-white transition-all group shadow-sm hover:shadow-xl overflow-hidden">
-                           <div className="p-4 sm:p-6 space-y-4">
-                              <div className="flex items-start justify-between gap-4">
-                                 <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 shrink-0 bg-white rounded-xl flex items-center justify-center font-black text-sm text-red-600 shadow-md border border-red-50 relative">
-                                       {idx + 1}
-                                       <div className="absolute -top-1 -left-1 w-2 h-2 bg-red-600 rounded-full"></div>
-                                    </div>
-                                    <div>
-                                       <div className="flex items-center gap-2 mb-1.5">
-                                          <span className={`px-2 py-0.5 rounded-full text-[7px] font-black uppercase tracking-widest ${
-                                             item.type === '4D' ? 'bg-black text-white' :
-                                             item.type === '3D' ? 'bg-red-600 text-white' :
-                                             'bg-gray-200 text-gray-700'
-                                          }`}>
-                                             {item.type}
-                                          </span>
-                                          <span className="text-[8px] font-black text-gray-300 uppercase tracking-widest italic">{item.pos}</span>
-                                       </div>
-                                       <div className="flex flex-wrap gap-1.5">
-                                          {String(item.num).split('').map((n, i) => (
-                                             <span key={i} className="w-9 h-9 bg-gray-900 text-white rounded-lg flex items-center justify-center font-black text-lg shadow-md border-b-2 border-red-600 group-hover:scale-105 transition-transform">
-                                                {n}
-                                             </span>
-                                          ))}
-                                       </div>
-                                    </div>
-                                 </div>
-                                 <div className="text-right">
-                                    <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Intake</p>
-                                    <p className="text-lg font-black font-condensed italic text-gray-900 leading-none">₹{item.totalVal.toLocaleString()}</p>
-                                 </div>
-                              </div>
-                              <div className="flex items-center justify-between pt-4 border-t border-gray-100/50">
-                                 <div className="flex gap-1">
-                                    <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
-                                    <span className="text-[7px] font-black text-emerald-600 uppercase tracking-tighter">Live Monitor Active</span>
-                                 </div>
-                                 <div className="bg-red-600 px-4 py-1.5 rounded-full text-white flex items-center gap-2 shadow-lg shadow-red-500/20">
-                                    <Ticket size={10} />
-                                    <span className="text-[10px] font-black italic">{item.qty} Tickets</span>
-                                 </div>
-                              </div>
-                           </div>
-                        </div>
+                   <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+                      {boardOptions[monitorType].map(board => (
+                         <button 
+                           key={board} 
+                           onClick={() => setMonitorBoard(board)}
+                           className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all border-2 ${monitorBoard === board ? 'border-red-600 text-red-600 bg-red-50' : 'border-gray-100 text-gray-300'}`}
+                         >
+                            {board} Board
+                         </button>
                       ))}
-                      {dynamicAnalyticFeed[showDetailSlot].topNumbers.length === 0 && (
+                   </div>
+
+                   <div className="relative flex-grow sm:max-w-[200px]">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300" size={14} />
+                      <input 
+                        type="text" 
+                        placeholder="Search number..." 
+                        value={monitorSearch}
+                        onChange={(e) => setMonitorSearch(e.target.value)}
+                        className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-100 rounded-xl text-[10px] font-black outline-none focus:border-red-600 transition-colors"
+                      />
+                   </div>
+                </div>
+
+                {/* Detailed Monitoring Table */}
+                <div className="bg-white rounded-[2.5rem] shadow-2xl border border-gray-100 overflow-hidden mb-12">
+                   <div className="p-8 border-b border-gray-50 flex flex-col sm:flex-row items-center justify-between bg-gray-50/30 gap-4">
+                      <div className="flex items-center gap-3">
+                         <div className="w-10 h-10 bg-red-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-red-500/20"><List size={20} /></div>
+                         <div>
+                            <h5 className="text-[14px] font-black uppercase tracking-widest italic">{monitorType} - {monitorBoard} Inventory</h5>
+                            <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Real-time combination monitoring</p>
+                         </div>
+                      </div>
+                      <div className="flex gap-4">
+                        <div className="text-right">
+                           <p className="text-[8px] font-black text-gray-300 uppercase mb-0.5">Total Rows</p>
+                           <p className="text-sm font-black font-condensed italic text-gray-900">{getNumberRange().length}</p>
+                        </div>
+                        <div className="text-right border-l border-gray-200 pl-4">
+                           <p className="text-[8px] font-black text-gray-300 uppercase mb-0.5">Active</p>
+                           <p className="text-sm font-black font-condensed italic text-red-600">{getNumberRange().filter(n => (dynamicAnalyticFeed[showDetailSlot]?.dataStore?.[monitorType]?.[monitorBoard]?.[n] || 0) > 0).length}</p>
+                        </div>
+                      </div>
+                   </div>
+
+                   <div className="overflow-x-auto">
+                      <table className="w-full text-left border-collapse">
+                         <thead className="bg-white shadow-sm">
+                            <tr className="border-b border-gray-100">
+                               <th className="px-8 py-4 text-[10px] font-black uppercase text-gray-400 tracking-widest">Combination</th>
+                               <th className="px-8 py-4 text-[10px] font-black uppercase text-gray-400 tracking-widest text-center">Tickets Purchased</th>
+                               <th className="px-8 py-4 text-[10px] font-black uppercase text-gray-400 tracking-widest text-right">Trend</th>
+                            </tr>
+                         </thead>
+                         <tbody className="divide-y divide-gray-50">
+                            {getNumberRange().map(num => {
+                               const boardData = dynamicAnalyticFeed[showDetailSlot]?.dataStore?.[monitorType]?.[monitorBoard];
+                               const count = boardData ? (boardData[num] || 0) : 0;
+                               return (
+                                 <tr key={num} className={`group hover:bg-red-50/30 transition-colors ${count > 0 ? 'bg-red-50/10' : ''}`}>
+                                    <td className="px-8 py-4">
+                                       <div className="flex items-center gap-3">
+                                          <span className={`w-10 h-10 rounded-lg flex items-center justify-center font-black text-lg font-condensed italic ${count > 0 ? 'bg-red-600 text-white shadow-md' : 'bg-gray-100 text-gray-400'}`}>
+                                             {num}
+                                          </span>
+                                          {count > 0 && <span className="w-1.5 h-1.5 bg-red-600 rounded-full animate-pulse"></span>}
+                                       </div>
+                                    </td>
+                                    <td className="px-8 py-4 text-center">
+                                       <div className="flex flex-col items-center">
+                                          <span className={`text-xl font-black font-condensed italic ${count > 0 ? 'text-gray-900' : 'text-gray-200'}`}>
+                                             {count}
+                                          </span>
+                                          <p className="text-[7px] font-black text-gray-300 uppercase tracking-tighter">Units</p>
+                                       </div>
+                                    </td>
+                                    <td className="px-8 py-4 text-right">
+                                       {count > 0 ? (
+                                          <div className="flex items-center justify-end gap-2 text-emerald-500 font-black text-[10px] italic">
+                                             <TrendingUp size={12} />
+                                             ACTIVE
+                                          </div>
+                                       ) : (
+                                          <span className="text-[10px] font-black text-gray-200 italic uppercase">Dormant</span>
+                                       )}
+                                    </td>
+                                 </tr>
+                               );
+                            })}
+                         </tbody>
+                      </table>
+
+                      {getNumberRange().length === 0 && (
                          <div className="py-20 text-center opacity-20">
-                            <Gamepad2 size={48} className="mx-auto mb-4" />
-                            <p className="text-xs font-black uppercase tracking-widest">No tickets purchased for this slot yet.</p>
+                            <Search size={48} className="mx-auto mb-4" />
+                            <p className="text-xs font-black uppercase tracking-widest">No combinations found matching your search.</p>
                          </div>
                       )}
                    </div>
                 </div>
+                <div className="h-20"></div> {/* Bottom Spacing for mobile overflow */}
              </div>
            )}
         </div>
@@ -558,7 +645,7 @@ const AdminAnnouncements = () => {
                       <tr><td>Date</td><td>{res.date}</td></tr>
                       <tr><td>Time</td><td>{res.draw}</td></tr>
                       <tr><td>Lot Name</td><td>{res.brand}</td></tr>
-                      <tr><td>Winning Number</td><td><div className="flex items-center">{res.number.split('').map((digit, idx) => (<span key={idx} className="result-circle">{digit}</span>))}</div></td></tr>
+                      <tr><td>Winning Number</td><td><div className="flex items-center">{(res.number || "").split('').map((digit, idx) => (<span key={idx} className="result-circle">{digit}</span>))}</div></td></tr>
                     </tbody>
                   </table>
                 </div>
