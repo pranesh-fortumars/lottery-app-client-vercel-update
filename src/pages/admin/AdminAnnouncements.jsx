@@ -545,80 +545,76 @@ const AdminAnnouncements = () => {
                 </div>
 
                 {/* Detailed Monitoring Table */}
-                <div className="bg-white rounded-[2.5rem] shadow-2xl border border-gray-100 overflow-hidden mb-12">
-                   <div className="p-8 border-b border-gray-50 flex flex-col sm:flex-row items-center justify-between bg-gray-50/30 gap-4">
-                      <div className="flex items-center gap-3">
-                         <div className="w-10 h-10 bg-red-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-red-500/20"><List size={20} /></div>
+                <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden mb-12">
+                   <div className="p-6 border-b border-gray-200 flex flex-col sm:flex-row items-center justify-between bg-gray-50/50 gap-4">
+                      <div className="flex items-center gap-4">
+                         <div className="w-10 h-10 bg-gray-900 rounded-lg flex items-center justify-center text-white shadow-lg"><BarChart3 size={20} /></div>
                          <div>
-                            <h5 className="text-[14px] font-black uppercase tracking-widest italic">{monitorType} - {monitorBoard} Inventory</h5>
-                            <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Real-time combination monitoring</p>
+                            <h5 className="text-[14px] font-black uppercase tracking-widest italic leading-tight">{monitorType} - {monitorBoard} Inventory</h5>
+                            <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mt-0.5">Real-time Stock Monitor</p>
                          </div>
                       </div>
-                      <div className="flex gap-4">
+                      <div className="flex gap-8">
                         <div className="text-right">
-                           <p className="text-[8px] font-black text-gray-300 uppercase mb-0.5">Total Rows</p>
-                           <p className="text-sm font-black font-condensed italic text-gray-900">{getNumberRange().length}</p>
+                           <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Total</p>
+                           <p className="text-lg font-black font-condensed italic text-gray-950 tabular-nums">{getNumberRange().length}</p>
                         </div>
-                        <div className="text-right border-l border-gray-200 pl-4">
-                           <p className="text-[8px] font-black text-gray-300 uppercase mb-0.5">Active</p>
-                           <p className="text-sm font-black font-condensed italic text-red-600">{getNumberRange().filter(n => (dynamicAnalyticFeed[showDetailSlot]?.dataStore?.[monitorType]?.[monitorBoard]?.[n] || 0) > 0).length}</p>
+                        <div className="text-right border-l border-gray-200 pl-8">
+                           <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Active</p>
+                           <p className="text-lg font-black font-condensed italic text-red-600 tabular-nums">{getNumberRange().filter(n => (dynamicAnalyticFeed[showDetailSlot]?.dataStore?.[monitorType]?.[monitorBoard]?.[n] || 0) > 0).length}</p>
                         </div>
                       </div>
                    </div>
 
                    <div className="overflow-x-auto">
-                      <table className="w-full text-left border-collapse">
-                         <thead className="bg-white shadow-sm">
-                            <tr className="border-b border-gray-100">
-                               <th className="px-8 py-4 text-[10px] font-black uppercase text-gray-400 tracking-widest">Combination</th>
-                               <th className="px-8 py-4 text-[10px] font-black uppercase text-gray-400 tracking-widest text-center">Tickets Purchased</th>
-                               <th className="px-8 py-4 text-[10px] font-black uppercase text-gray-400 tracking-widest text-right">Trend</th>
+                      <table className="w-full text-left border-collapse border-2 border-gray-200">
+                         <thead className="bg-gray-100">
+                            <tr>
+                               <th className="px-6 py-4 text-[11px] font-black uppercase text-gray-600 tracking-widest border-2 border-gray-200 w-1/2"># Combination</th>
+                               <th className="px-6 py-4 text-[11px] font-black uppercase text-gray-600 tracking-widest text-center border-2 border-gray-200 w-1/2">Tickets Sold</th>
                             </tr>
                          </thead>
-                         <tbody className="divide-y divide-gray-50">
+                         <tbody className="divide-y-2 divide-gray-200">
                             {getNumberRange().map(num => {
                                const boardData = dynamicAnalyticFeed[showDetailSlot]?.dataStore?.[monitorType]?.[monitorBoard];
                                const count = boardData ? (boardData[num] || 0) : 0;
+                               const intensity = Math.min((count / 50) * 100, 100); 
+
                                return (
-                                 <tr key={num} className={`group hover:bg-red-50/30 transition-colors ${count > 0 ? 'bg-red-50/10' : ''}`}>
-                                    <td className="px-8 py-4">
-                                       <div className="flex items-center gap-3">
-                                          <span className={`w-10 h-10 rounded-lg flex items-center justify-center font-black text-lg font-condensed italic ${count > 0 ? 'bg-red-600 text-white shadow-md' : 'bg-gray-100 text-gray-400'}`}>
+                                 <tr key={num} className={`group transition-all ${count > 0 ? 'bg-red-50/20' : 'bg-white hover:bg-gray-50'}`}>
+                                    <td className="px-6 py-4 border-2 border-gray-200">
+                                       <div className="flex items-center gap-4">
+                                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center font-black text-lg font-condensed italic transition-all ${count > 0 ? 'bg-red-600 text-white shadow-md' : 'bg-gray-50 text-gray-500 border border-gray-200'}`}>
                                              {num}
-                                          </span>
-                                          {count > 0 && <span className="w-1.5 h-1.5 bg-red-600 rounded-full animate-pulse"></span>}
-                                       </div>
-                                    </td>
-                                    <td className="px-8 py-4 text-center">
-                                       <div className="flex flex-col items-center">
-                                          <span className={`text-xl font-black font-condensed italic ${count > 0 ? 'text-gray-900' : 'text-gray-200'}`}>
-                                             {count}
-                                          </span>
-                                          <p className="text-[7px] font-black text-gray-300 uppercase tracking-tighter">Units</p>
-                                       </div>
-                                    </td>
-                                    <td className="px-8 py-4 text-right">
-                                       {count > 0 ? (
-                                          <div className="flex items-center justify-end gap-2 text-emerald-500 font-black text-[10px] italic">
-                                             <TrendingUp size={12} />
-                                             ACTIVE
                                           </div>
-                                       ) : (
-                                          <span className="text-[10px] font-black text-gray-200 italic uppercase">Dormant</span>
-                                       )}
+                                          {count > 0 && (
+                                            <div className="flex flex-col">
+                                               <span className="text-[8px] font-black text-red-600 uppercase italic tracking-widest animate-pulse">Live</span>
+                                               <span className="text-[7px] font-bold text-gray-400 uppercase">#{Math.floor(Math.random()*9000)+1000}</span>
+                                            </div>
+                                          )}
+                                       </div>
+                                    </td>
+                                    <td className="px-6 py-4 border-2 border-gray-200">
+                                       <div className="flex flex-col items-center">
+                                          <div className="flex items-baseline gap-1">
+                                             <span className={`text-2xl font-black font-condensed italic tabular-nums leading-none ${count > 0 ? 'text-gray-950' : 'text-gray-400'}`}>
+                                                {count}
+                                             </span>
+                                             {count > 0 && <span className="text-[9px] font-black text-emerald-500 uppercase italic">Units</span>}
+                                          </div>
+                                          {count > 0 && (
+                                            <div className="w-24 h-1.5 bg-gray-100 rounded-full mt-2 overflow-hidden border border-gray-200">
+                                               <div className="h-full bg-red-600 rounded-full shadow-[0_0_8px_rgba(220,38,38,0.5)]" style={{ width: `${intensity}%` }}></div>
+                                            </div>
+                                          )}
+                                       </div>
                                     </td>
                                  </tr>
                                );
                             })}
                          </tbody>
                       </table>
-
-                      {getNumberRange().length === 0 && (
-                         <div className="py-20 text-center opacity-20">
-                            <Search size={48} className="mx-auto mb-4" />
-                            <p className="text-xs font-black uppercase tracking-widest">No combinations found matching your search.</p>
-                         </div>
-                      )}
                    </div>
                 </div>
                 <div className="h-20"></div> {/* Bottom Spacing for mobile overflow */}
