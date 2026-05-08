@@ -64,6 +64,7 @@ const AdminAnnouncements = () => {
   const [monitorType, setMonitorType] = useState('1D');
   const [monitorBoard, setMonitorBoard] = useState('A');
   const [monitorSearch, setMonitorSearch] = useState('');
+  const [monitorTier, setMonitorTier] = useState('ALL');
   const [monitorDate, setMonitorDate] = useState(new Date().toISOString().split('T')[0]);
 
   const boardOptions = {
@@ -73,10 +74,16 @@ const AdminAnnouncements = () => {
     '4D': ['XABC']
   };
 
+  const tierOptions = {
+    '3D': ['12', '28', '30', '55', '60'],
+    '4D': ['20', '50', '100']
+  };
+
   useEffect(() => {
     if (boardOptions[monitorType]) {
       setMonitorBoard(boardOptions[monitorType][0]);
     }
+    setMonitorTier('ALL');
   }, [monitorType]);
 
   // Result History Date Filter
@@ -109,8 +116,13 @@ const AdminAnnouncements = () => {
     const slots = Object.values(drawAssignments).flat();
     
     slots.forEach(s => {
-      // Filter by both Draw Time AND Selected Monitor Date
-      const tickets = purchasedTickets.filter(t => t.draw === s && t.purchaseDate === monitorDate);
+      // Filter by Draw Time, Monitor Date, AND Selected Price Tier (for 3D/4D)
+      const tickets = purchasedTickets.filter(t => {
+        const dateMatch = t.purchaseDate === monitorDate;
+        const drawMatch = t.draw === s;
+        const tierMatch = monitorTier === 'ALL' || String(Math.floor(Number(t.price || 0))) === monitorTier;
+        return dateMatch && drawMatch && tierMatch;
+      });
       
       const combinationTable = {
         '1D': { A: 0, B: 0, C: 0 },
@@ -151,7 +163,7 @@ const AdminAnnouncements = () => {
       feed[s] = breakdown;
     });
     return feed;
-  }, [purchasedTickets, monitorDate]);
+  }, [purchasedTickets, monitorDate, monitorTier]);
 
   const filteredHistory = useMemo(() => {
     // Both historyDate and res.date are in YYYY-MM-DD format
@@ -569,105 +581,141 @@ const AdminAnnouncements = () => {
                    </div>
                 </div>
 
-                {/* Filter Bar */}
-                <div className="bg-white rounded-[2rem] p-4 shadow-xl border border-gray-100 flex flex-wrap gap-3 items-center justify-between sticky top-2 z-[90]">
-                   <div className="flex gap-2">
-                      {['1D', '2D', '3D', '4D'].map(type => (
-                         <button 
-                           key={type} 
-                           onClick={() => setMonitorType(type)}
-                           className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all ${monitorType === type ? 'bg-red-600 text-white shadow-lg' : 'bg-gray-100 text-gray-400'}`}
-                         >
-                            {type}
-                         </button>
-                      ))}
-                   </div>
-                   
-                   <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-                      {boardOptions[monitorType].map(board => (
-                         <button 
-                           key={board} 
-                           onClick={() => setMonitorBoard(board)}
-                           className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all border-2 ${monitorBoard === board ? 'border-red-600 text-red-600 bg-red-50' : 'border-gray-100 text-gray-300'}`}
-                         >
-                            {board} Board
-                         </button>
-                      ))}
-                   </div>
-
-                   <div className="relative flex-grow sm:max-w-[200px]">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300" size={14} />
-                      <input 
-                        type="text" 
-                        placeholder="Search number..." 
-                        value={monitorSearch}
-                        onChange={(e) => setMonitorSearch(e.target.value)}
-                        className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-100 rounded-xl text-[10px] font-black outline-none focus:border-red-600 transition-colors"
-                      />
-                   </div>
-                </div>
-
-                {/* High-Frequency Analytics Table (Only for 4D) */}
-                {monitorType === '4D' && (
-                  <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden mb-8 animate-in slide-in-from-left duration-700">
-                    <div className="p-6 border-b border-gray-200 bg-red-50/30 flex items-center justify-between">
-                       <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 bg-red-600 rounded-lg flex items-center justify-center text-white shadow-lg shadow-red-500/20"><Zap size={20} /></div>
-                          <div>
-                             <h5 className="text-[14px] font-black uppercase tracking-widest italic leading-tight">High-Frequency 4D Analytics</h5>
-                             <p className="text-[9px] font-black text-red-600/60 uppercase tracking-widest mt-0.5">Top Purchased Combinations for this Slot</p>
-                          </div>
+                 {/* Refined Filter Bar */}
+                 <div className="bg-white rounded-[2rem] p-4 sm:p-5 shadow-xl border border-gray-100 space-y-4 sticky top-2 z-[90]">
+                    {/* Primary Row: Type & Search */}
+                    <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
+                       <div className="flex gap-1.5 p-1 bg-gray-50 rounded-2xl border border-gray-100">
+                          {['1D', '2D', '3D', '4D'].map(type => (
+                             <button 
+                               key={type} 
+                               onClick={() => setMonitorType(type)}
+                               className={`px-5 py-2.5 rounded-xl text-[10px] font-black uppercase transition-all ${monitorType === type ? 'bg-red-600 text-white shadow-lg shadow-red-500/20' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'}`}
+                             >
+                                {type}
+                             </button>
+                          ))}
+                       </div>
+                       
+                       <div className="relative w-full sm:max-w-[240px]">
+                          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" size={16} />
+                          <input 
+                            type="text" 
+                            placeholder="Search combination..." 
+                            value={monitorSearch}
+                            onChange={(e) => setMonitorSearch(e.target.value)}
+                            className="w-full pl-11 pr-5 py-3 bg-gray-50 border border-gray-100 rounded-2xl text-[11px] font-black outline-none focus:border-red-600 transition-all placeholder:text-gray-300 shadow-sm"
+                          />
                        </div>
                     </div>
-                    
-                    <div className="overflow-x-auto">
-                       <table className="w-full text-left border-collapse border-2 border-gray-200">
-                          <thead className="bg-gray-100">
-                             <tr>
-                                <th className="px-6 py-4 text-[11px] font-black uppercase text-gray-600 tracking-widest border-2 border-gray-200 w-24">Rank</th>
-                                <th className="px-6 py-4 text-[11px] font-black uppercase text-gray-600 tracking-widest border-2 border-gray-200"># Combination</th>
-                             </tr>
-                          </thead>
-                          <tbody>
-                             {(() => {
-                                const boardData = dynamicAnalyticFeed[showDetailSlot]?.dataStore?.[monitorType]?.[monitorBoard] || {};
-                                const sortedCombos = Object.entries(boardData)
-                                  .filter(([_, count]) => count > 0)
-                                  .sort((a, b) => b[1] - a[1])
-                                  .slice(0, 15); // Top 15
 
-                                if (sortedCombos.length === 0) {
-                                  return (
-                                    <tr>
-                                      <td colSpan="2" className="px-6 py-12 text-center text-gray-300 italic text-[11px] font-black uppercase tracking-widest border-2 border-gray-200">
-                                        No high-frequency data available for this slot yet
-                                      </td>
-                                    </tr>
-                                  );
-                                }
+                    {/* High-Density Row: Boards & Tiers (No Scrolling) */}
+                    <div className="flex flex-wrap gap-x-6 gap-y-3 pt-4 border-t border-gray-100 items-center">
+                       <div className="flex flex-wrap gap-2 items-center">
+                          {boardOptions[monitorType].map(board => (
+                             <button 
+                               key={board} 
+                               onClick={() => setMonitorBoard(board)}
+                               className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all border-2 whitespace-nowrap ${monitorBoard === board ? 'border-red-600 text-red-600 bg-red-50 shadow-sm' : 'border-gray-100 text-gray-400 hover:border-gray-200 bg-white'}`}
+                             >
+                                {board} Board
+                             </button>
+                          ))}
+                       </div>
 
-                                return sortedCombos.map(([num, count], index) => {
-                                  return (
-                                    <tr key={num} className="group hover:bg-red-50/10 transition-all">
-                                      <td className="px-6 py-4 border-2 border-gray-200">
-                                        <span className="w-8 h-8 rounded-lg bg-gray-950 text-white flex items-center justify-center font-black italic shadow-md">#{index + 1}</span>
-                                      </td>
-                                      <td className="px-6 py-4 border-2 border-gray-200">
-                                        <div className="flex gap-2">
-                                          {num.split('').map((d, i) => (
-                                            <span key={i} className="w-10 h-10 rounded-xl bg-white border-2 border-gray-100 flex items-center justify-center font-black text-xl italic text-gray-900 shadow-sm group-hover:border-red-600 transition-all">{d}</span>
-                                          ))}
-                                        </div>
-                                      </td>
-                                    </tr>
-                                  );
-                                });
-                             })()}
-                          </tbody>
-                       </table>
+                       {(monitorType === '3D' || monitorType === '4D') && (
+                          <div className="flex flex-wrap items-center gap-2 border-l-0 sm:border-l sm:pl-6 border-gray-100">
+                             <div className="flex items-center gap-1.5 shrink-0 mr-1">
+                                <ListFilter size={12} className="text-gray-300" />
+                                <span className="text-[9px] font-black text-gray-300 uppercase tracking-widest">Tiers:</span>
+                             </div>
+                             
+                             <button 
+                               onClick={() => setMonitorTier('ALL')}
+                               className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all ${monitorTier === 'ALL' ? 'bg-gray-900 text-white shadow-md' : 'bg-gray-100 text-gray-400 hover:bg-gray-200'}`}
+                             >
+                               All
+                             </button>
+                             {tierOptions[monitorType].map(tier => (
+                                <button 
+                                  key={tier} 
+                                  onClick={() => setMonitorTier(tier)}
+                                  className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all whitespace-nowrap ${monitorTier === tier ? 'bg-blue-600 text-white shadow-md' : 'bg-white text-gray-400 border border-gray-100 hover:border-gray-300'}`}
+                                >
+                                   ₹{tier}
+                                </button>
+                             ))}
+                          </div>
+                       )}
                     </div>
-                  </div>
-                )}
+                 </div>
+
+                 {/* High-Frequency Analytics Table (Support 3D & 4D) */}
+                 {(monitorType === '3D' || monitorType === '4D') && (
+                   <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden mb-8 animate-in slide-in-from-left duration-700">
+                     <div className="p-6 border-b border-gray-200 bg-red-50/30 flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                           <div className="w-10 h-10 bg-red-600 rounded-lg flex items-center justify-center text-white shadow-lg shadow-red-500/20"><Zap size={20} /></div>
+                           <div>
+                              <h5 className="text-[14px] font-black uppercase tracking-widest italic leading-tight">High-Frequency {monitorType} Analytics</h5>
+                              <p className="text-[9px] font-black text-red-600/60 uppercase tracking-widest mt-0.5">Top Purchased {monitorType} Combinations for this Slot</p>
+                           </div>
+                        </div>
+                        {monitorTier !== 'ALL' && (
+                          <div className="px-4 py-1.5 rounded-full bg-blue-600 text-white text-[9px] font-black uppercase tracking-widest shadow-md animate-pulse">
+                            Tier: ₹{monitorTier}
+                          </div>
+                        )}
+                     </div>
+                     
+                     <div className="overflow-x-auto">
+                        <table className="w-full text-left border-collapse border-2 border-gray-200">
+                           <thead className="bg-gray-100">
+                              <tr>
+                                 <th className="px-6 py-4 text-[11px] font-black uppercase text-gray-600 tracking-widest border-2 border-gray-200 w-24">Rank</th>
+                                 <th className="px-6 py-4 text-[11px] font-black uppercase text-gray-600 tracking-widest border-2 border-gray-200"># Combination</th>
+                              </tr>
+                           </thead>
+                           <tbody>
+                              {(() => {
+                                 const boardData = dynamicAnalyticFeed[showDetailSlot]?.dataStore?.[monitorType]?.[monitorBoard] || {};
+                                 const sortedCombos = Object.entries(boardData)
+                                   .filter(([_, count]) => count > 0)
+                                   .sort((a, b) => b[1] - a[1])
+                                   .slice(0, 15); // Top 15
+ 
+                                 if (sortedCombos.length === 0) {
+                                   return (
+                                     <tr>
+                                       <td colSpan="2" className="px-6 py-12 text-center text-gray-300 italic text-[11px] font-black uppercase tracking-widest border-2 border-gray-200">
+                                         No high-frequency data available for this {monitorType} {monitorTier !== 'ALL' ? `Tier (₹${monitorTier})` : ''} slot yet
+                                       </td>
+                                     </tr>
+                                   );
+                                 }
+ 
+                                 return sortedCombos.map(([num, count], index) => {
+                                   return (
+                                     <tr key={num} className="group hover:bg-red-50/10 transition-all">
+                                       <td className="px-6 py-4 border-2 border-gray-200">
+                                         <span className="w-8 h-8 rounded-lg bg-gray-950 text-white flex items-center justify-center font-black italic shadow-md">#{index + 1}</span>
+                                       </td>
+                                       <td className="px-6 py-4 border-2 border-gray-200">
+                                         <div className="flex gap-2">
+                                           {num.split('').map((d, i) => (
+                                             <span key={i} className="w-10 h-10 rounded-xl bg-white border-2 border-gray-100 flex items-center justify-center font-black text-xl italic text-gray-900 shadow-sm group-hover:border-red-600 transition-all">{d}</span>
+                                           ))}
+                                         </div>
+                                       </td>
+                                     </tr>
+                                   );
+                                 });
+                              })()}
+                           </tbody>
+                        </table>
+                     </div>
+                   </div>
+                 )}
 
                 {/* Detailed Monitoring Table */}
                 <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden mb-12">
