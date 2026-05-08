@@ -24,25 +24,29 @@ export const AuthProvider = ({ children }) => {
 
   React.useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      setLoading(true); // Always signal loading when auth state starts shifting
       if (firebaseUser) {
-        // Fetch additional user data from Firestore
-        const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
-        if (userDoc.exists()) {
-          const userData = userDoc.data();
-          setUser({
-            uid: firebaseUser.uid,
-            email: firebaseUser.email,
-            ...userData
-          });
-        } else {
-          // If no doc exists (fallback), set basic user info
-          setUser({
-            uid: firebaseUser.uid,
-            email: firebaseUser.email,
-            role: 'user',
-            name: firebaseUser.displayName || 'User',
-            balance: 0
-          });
+        try {
+          const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+          if (userDoc.exists()) {
+            const userData = userDoc.data();
+            setUser({
+              uid: firebaseUser.uid,
+              email: firebaseUser.email,
+              ...userData
+            });
+          } else {
+            setUser({
+              uid: firebaseUser.uid,
+              email: firebaseUser.email,
+              role: 'user',
+              name: firebaseUser.displayName || 'User',
+              balance: 0
+            });
+          }
+        } catch (err) {
+          console.error("Auth hydration error:", err);
+          setUser(null);
         }
       } else {
         setUser(null);
@@ -144,7 +148,7 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider value={{ user, login, signup, logout, updateBalance, loading }}>
-      {!loading && children}
+      {children}
     </AuthContext.Provider>
   );
 };

@@ -28,16 +28,38 @@ import { CartProvider } from './context/CartContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { PaymentProvider } from './context/PaymentContext';
 
+const FullPageLoader = () => (
+  <div className="fixed inset-0 bg-white z-[9999] flex flex-col items-center justify-center p-8">
+     <div className="relative">
+        <div className="w-20 h-20 border-[3px] border-gray-100 border-t-red-600 rounded-full animate-spin"></div>
+        <div className="absolute inset-0 flex items-center justify-center">
+           <div className="w-12 h-12 bg-red-50 rounded-full flex items-center justify-center animate-pulse">
+              <div className="w-6 h-6 bg-red-600 rounded-full"></div>
+           </div>
+        </div>
+     </div>
+     <div className="mt-8 text-center">
+        <h2 className="text-xl font-black italic uppercase tracking-[0.2em] text-gray-900">Authenticating</h2>
+        <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mt-2 italic">Securing Diamond Secretariat Connection...</p>
+     </div>
+  </div>
+);
+
 const ProtectedRoute = ({ children, role }) => {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
+  
+  if (loading) return <FullPageLoader />;
   if (!user) return <Navigate to="/login" replace />;
   if (role && user.role !== role) return <Navigate to="/home" replace />;
+  
   return children;
 };
 
 // --- Unified Landing Logic ---
 const LandingPage = () => {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
+  
+  if (loading) return <FullPageLoader />;
   if (!user) return <Navigate to="/login" replace />;
 
   // Redirect based on database role from a single port
