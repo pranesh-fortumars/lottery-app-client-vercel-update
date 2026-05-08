@@ -27,7 +27,7 @@ const ProfilePage = () => {
     !isAdmin && { icon: <Ticket size={20} />, label: 'My Tickets', color: 'text-green-500', path: '/tickets' },
     !isAdmin && { icon: <Wallet size={20} />, label: 'Wallet Top Up', color: 'text-blue-500', path: '/topup' },
     { icon: <History size={20} />, label: 'Transaction History', color: 'text-purple-500', path: '#' },
-    { icon: <Settings size={20} />, label: 'Settings', color: 'text-gray-500', path: '#' },
+    { icon: <Settings size={20} />, label: 'Settings', color: 'text-gray-500', path: isAdmin ? '/admin/settings' : '#' },
   ].filter(Boolean);
 
   const handleCopyCode = () => {
