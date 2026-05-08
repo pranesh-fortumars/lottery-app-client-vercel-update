@@ -16,6 +16,7 @@ import {
   setDoc
 } from 'firebase/firestore';
 import { db } from '../firebase';
+import { getBrandBySlot } from '../constants/lotteryConfig';
 
 const CartContext = React.createContext();
 
@@ -89,21 +90,22 @@ export const CartProvider = ({ children }) => {
     const unsubscribeResults = onSnapshot(collection(db, 'results'), (snapshot) => {
       const allResults = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
       
-      // 1. Sort by newest first
+      // 1. Sort by newest first, handling null timestamps (local estimates) gracefully
       const sorted = allResults.sort((a, b) => {
         const timeA = a.timestamp?.toMillis ? a.timestamp.toMillis() : Date.now();
         const timeB = b.timestamp?.toMillis ? b.timestamp.toMillis() : Date.now();
-        if (timeB !== timeA) return timeB - timeA;
+        
+        if (Math.abs(timeB - timeA) > 1000) return timeB - timeA;
         return String(b.id).localeCompare(String(a.id)); 
       });
 
-      // 2. Deduplicate: Only keep the latest declaration for each unique draw/market slot
+      // 2. Deduplicate: Only keep the latest declaration for each unique brand/date/draw slot
       const uniqueResults = [];
       const seenSlots = new Set();
 
       sorted.forEach(res => {
-        // Use a composite key of date and draw time to ensure corrections work across different days
-        const slotKey = `${res.date}_${res.draw}`;
+        // Updated key to include brand to prevent cross-market overwriting
+        const slotKey = `${res.brand}_${res.date}_${res.draw}`;
         if (!seenSlots.has(slotKey)) {
           uniqueResults.push(res);
           seenSlots.add(slotKey);
@@ -111,6 +113,8 @@ export const CartProvider = ({ children }) => {
       });
 
       setDeclaredResults(uniqueResults);
+    }, (error) => {
+      console.error("Results subscription error:", error);
     });
 
     const unsubscribeNotifs = onSnapshot(collection(db, 'notifications'), (snapshot) => {
@@ -397,6 +401,7 @@ export const CartProvider = ({ children }) => {
 
     await addDoc(collection(db, 'results'), {
       ...data,
+      brand: getBrandBySlot(data.draw), // Strict enforcement
       digits: normalizedDigits,
       number: fullNum,
       timestamp: serverTimestamp()

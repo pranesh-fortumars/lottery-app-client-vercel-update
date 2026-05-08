@@ -1,10 +1,18 @@
 import React from 'react';
 import PageWrapper from '../components/PageWrapper';
 import { useCart } from '../context/CartContext';
+import { getBrandBySlot } from '../constants/lotteryConfig';
 import { Search, Trophy, History } from 'lucide-react';
 
 const ResultsPage = () => {
   const { declaredResults } = useCart();
+  const [lastSync, setLastSync] = React.useState(new Date());
+
+  React.useEffect(() => {
+    if (declaredResults.length > 0) {
+      setLastSync(new Date());
+    }
+  }, [declaredResults]);
 
   return (
     <PageWrapper title="DAILY RESULTS">
@@ -13,10 +21,15 @@ const ResultsPage = () => {
         <div className="w-full max-w-sm bg-[#ff0033] text-white p-4 rounded-2xl mb-8 flex justify-between items-center shadow-xl relative overflow-hidden">
            <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12 blur-xl"></div>
            <div>
-              <h3 className="text-lg font-black uppercase tracking-tighter italic italic">Live Results Board</h3>
-              <p className="text-[8px] font-black uppercase tracking-widest opacity-60">Real-time sync enabled</p>
+              <h3 className="text-lg font-black uppercase tracking-tighter italic">Live Results Board</h3>
+              <p className="text-[8px] font-black uppercase tracking-widest opacity-60">
+                Last Sync: {lastSync.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+              </p>
            </div>
-           <Trophy size={32} fill="white" className="opacity-40" />
+           <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-emerald-400 rounded-full animate-ping"></div>
+              <Trophy size={24} fill="white" className="opacity-40" />
+           </div>
         </div>
 
         {declaredResults.length === 0 ? (
@@ -26,10 +39,10 @@ const ResultsPage = () => {
           </div>
         ) : (
           declaredResults.map((r, i) => (
-            <div key={i} className="mb-8 w-full max-w-sm group">
+            <div key={r.id || i} className="mb-8 w-full max-w-sm group animate-in fade-in slide-in-from-bottom-4 duration-500">
               <div className="flex items-center gap-2 mb-2 ml-1">
                  <div className="w-1.5 h-1.5 bg-[#ff0033] rounded-full animate-pulse shadow-[0_0_5px_#ff0033]"></div>
-                 <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Draw Entry #{r.id.toString().slice(-4)}</span>
+                 <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Draw Entry #{String(r.id || '').slice(-4)}</span>
               </div>
               <table className="w-full border-collapse border border-red-600 text-left bg-white shadow-lg overflow-hidden rounded-xl">
                 <tbody>
@@ -43,7 +56,9 @@ const ResultsPage = () => {
                   </tr>
                   <tr className="border border-red-600">
                     <td className="p-3 border-r border-red-600 font-black text-[9px] uppercase tracking-widest bg-gray-50/50">Lot Name</td>
-                    <td className="p-3 font-black text-[#ff0033] text-xs tracking-tight uppercase italic">{r.brand} LOTTERY</td>
+                    <td className="p-3 font-black text-[#ff0033] text-xs tracking-tight uppercase italic">
+                      {getBrandBySlot(r.draw)} LOTTERY
+                    </td>
                   </tr>
                   <tr className="border border-red-600 bg-red-50/30">
                     <td className="p-3 border-r border-red-600 font-black text-[9px] uppercase tracking-widest bg-red-600 text-white">Winning Digits</td>

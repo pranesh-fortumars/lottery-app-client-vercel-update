@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Mail, Diamond, QrCode } from 'lucide-react';
 import { usePayment } from '../context/PaymentContext';
+import { DRAW_SLOTS } from '../constants/lotteryConfig';
 
 const CountdownTimer = ({ drawTime }) => {
   const [timeLeft, setTimeLeft] = useState({ h: '00', m: '00', s: '00' });
@@ -74,13 +75,11 @@ const Dashboard = () => {
     return diffInMinutes <= 15;
   };
 
-  const games = [
-    { time: '01:00 PM', name: 'DEAR', type: 'dear' },
-    { time: '06:00 PM', name: 'DEAR', type: 'dear' },
-    { time: '08:00 PM', name: 'DEAR', type: 'dear' },
-    { time: '03:00 PM', name: 'KERALA', type: 'kerala' }
-  ].map(game => ({
-    ...game,
+  const games = DRAW_SLOTS.map(game => ({
+    time: game.time,
+    name: game.brand,
+    type: game.brand.toLowerCase(),
+    id: game.id,
     closed: isClosed(game.time)
   }));
 
@@ -144,7 +143,7 @@ const Dashboard = () => {
             className={`game-card-gradient p-4 rounded-3xl relative overflow-hidden h-[160px] shadow-2xl border border-white/5 transition-all ${
               game.closed ? 'opacity-60 grayscale scale-[0.98]' : 'cursor-pointer active:scale-95'
             }`}
-            onClick={() => !game.closed && navigate(`/select/${idx + 1}`)}
+            onClick={() => !game.closed && navigate(`/select/${game.id}`)}
           >
             {/* Gold Geometric Lines Overlay - More visible */}
             <div className="absolute top-0 right-0 w-full h-full opacity-40 pointer-events-none">

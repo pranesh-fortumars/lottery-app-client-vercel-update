@@ -4,22 +4,16 @@ import PageWrapper from '../components/PageWrapper';
 import { ScrollText, Gavel, ShoppingCart, Lock, Info } from 'lucide-react';
 import BettingCard from '../components/BettingCard';
 import { useCart } from '../context/CartContext';
+import { getSlotById } from '../constants/lotteryConfig';
 
 const SelectionPage = () => {
   const navigate = useNavigate();
   const { gameId } = useParams();
   const { cart } = useCart();
   
-  const gameTimes = {
-    '1': '01:00 PM',
-    '2': '06:00 PM',
-    '3': '08:00 PM',
-    '4': '03:00 PM'
-  };
-
-  const drawTime = gameTimes[gameId];
-  const isKerala = gameId === '4'; 
-  const marketName = isKerala ? 'KERALA' : 'DEAR';
+  const slotData = getSlotById(gameId);
+  const drawTime = slotData?.time || '01:00 PM';
+  const marketName = slotData?.brand || 'DEAR';
   
   const getGameName = () => `${marketName} LOTTERY`;
   

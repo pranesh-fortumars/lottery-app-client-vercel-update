@@ -39,6 +39,7 @@ import {
   Save
 } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
+import { MARKET_GROUPS, getBrandBySlot } from '../../constants/lotteryConfig';
 
 const AdminAnnouncements = () => {
   const { purchasedTickets, addResult, declaredResults, prizeScheme, updateScheme } = useCart();
@@ -92,10 +93,7 @@ const AdminAnnouncements = () => {
   // 4-Column Result Entry
   const [resultDigits, setResultDigits] = useState({ X: '', A: '', B: '', C: '' });
 
-  const drawAssignments = {
-    'DEAR': ['01:00 PM', '06:00 PM', '08:00 PM'],
-    'KERALA': ['03:00 PM']
-  };
+  const drawAssignments = MARKET_GROUPS;
 
   const isDrawFinished = (timeStr) => {
     if (!timeStr) return false;
@@ -182,7 +180,7 @@ const AdminAnnouncements = () => {
     addResult({ 
       draw: selectedSlot, 
       date: today,
-      brand: marketSelection === 'DEAR' ? 'DEARLOT' : 'KERELALOT', 
+      brand: getBrandBySlot(selectedSlot), 
       digits: resultDigits, 
       prizes: prizeScheme 
     });
@@ -227,7 +225,7 @@ const AdminAnnouncements = () => {
 
       const tableData = filteredHistory.map(res => [
         res.draw,
-        res.brand === 'DEARLOT' ? 'DEAR LOTTERY' : 'KERALA LOTTERY',
+        `${getBrandBySlot(res.draw)} LOTTERY`,
         res.number
       ]);
 
@@ -833,7 +831,7 @@ const AdminAnnouncements = () => {
                     <div>
                        <div className="flex items-center gap-2 mb-1">
                           <Trophy size={12} className="text-red-500" />
-                          <p className="text-[10px] font-black text-gray-950 uppercase tracking-tighter">{res.brand === 'DEARLOT' ? 'DEAR LOTTERY' : 'KERALA LOTTERY'}</p>
+                          <p className="text-[10px] font-black text-gray-950 uppercase tracking-tighter">{getBrandBySlot(res.draw)} LOTTERY</p>
                        </div>
                        <p className="text-[8px] font-bold text-gray-400 uppercase tracking-widest">Official Record ID: {res.id.toString().slice(-6)}</p>
                     </div>
