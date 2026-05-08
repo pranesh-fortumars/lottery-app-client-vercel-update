@@ -81,7 +81,7 @@ const AnimatedRoutes = () => {
           <Route path="/reset-password" element={<ResetPasswordPage />} />
           
           <Route path="/home" element={
-            <ProtectedRoute>
+            <ProtectedRoute role="user">
               <PageWrapper title="Diamond Agency">
                 <Dashboard />
               </PageWrapper>
@@ -90,13 +90,13 @@ const AnimatedRoutes = () => {
           
           <Route path="/rules" element={<ProtectedRoute><RulesPage /></ProtectedRoute>} />
           <Route path="/results" element={<ProtectedRoute><ResultsPage /></ProtectedRoute>} />
-          <Route path="/cart" element={<ProtectedRoute><CartPage /></ProtectedRoute>} />
+          <Route path="/cart" element={<ProtectedRoute role="user"><CartPage /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
 
-          <Route path="/select/:gameId" element={<ProtectedRoute><SelectionPage /></ProtectedRoute>} />
-          <Route path="/jackpot" element={<ProtectedRoute><JackpotPage /></ProtectedRoute>} />
-          <Route path="/tickets" element={<ProtectedRoute><MyTickets /></ProtectedRoute>} />
-          <Route path="/topup" element={<ProtectedRoute><TopUpPage /></ProtectedRoute>} />
+          <Route path="/select/:gameId" element={<ProtectedRoute role="user"><SelectionPage /></ProtectedRoute>} />
+          <Route path="/jackpot" element={<ProtectedRoute role="user"><JackpotPage /></ProtectedRoute>} />
+          <Route path="/tickets" element={<ProtectedRoute role="user"><MyTickets /></ProtectedRoute>} />
+          <Route path="/topup" element={<ProtectedRoute role="user"><TopUpPage /></ProtectedRoute>} />
           
           {/* Admin Routes */}
           <Route path="/admin" element={<ProtectedRoute role="admin"><AdminLayout><AdminDashboard /></AdminLayout></ProtectedRoute>} />

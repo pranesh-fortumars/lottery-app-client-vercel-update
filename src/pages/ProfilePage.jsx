@@ -21,12 +21,14 @@ const ProfilePage = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
 
+  const isAdmin = user?.role === 'admin';
+  
   const menuItems = [
-    { icon: <Ticket size={20} />, label: 'My Tickets', color: 'text-green-500', path: '/tickets' },
-    { icon: <Wallet size={20} />, label: 'Wallet Top Up', color: 'text-blue-500', path: '/topup' },
+    !isAdmin && { icon: <Ticket size={20} />, label: 'My Tickets', color: 'text-green-500', path: '/tickets' },
+    !isAdmin && { icon: <Wallet size={20} />, label: 'Wallet Top Up', color: 'text-blue-500', path: '/topup' },
     { icon: <History size={20} />, label: 'Transaction History', color: 'text-purple-500', path: '#' },
     { icon: <Settings size={20} />, label: 'Settings', color: 'text-gray-500', path: '#' },
-  ];
+  ].filter(Boolean);
 
   const handleCopyCode = () => {
     navigator.clipboard.writeText('DIAMOND777');
@@ -48,58 +50,64 @@ const ProfilePage = () => {
                     <div className="w-3 h-3 bg-emerald-500 rounded-full animate-pulse"></div>
                  </div>
               </div>
-              <h2 className="text-white text-3xl font-black uppercase tracking-tighter italic leading-none">{user?.name || 'Pranesh'}</h2>
-              <p className="text-white/60 font-black text-[10px] uppercase tracking-[0.3em] mt-1 shadow-sm px-2 py-0.5 rounded-full border border-white/5 bg-black/5">Verified Member</p>
-           </div>
-        </div>
+               <h2 className="text-white text-3xl font-black uppercase tracking-tighter italic leading-none">{user?.name || 'Pranesh'}</h2>
+               <p className="text-white/60 font-black text-[10px] uppercase tracking-[0.3em] mt-1 shadow-sm px-2 py-0.5 rounded-full border border-white/5 bg-black/5">
+                 {isAdmin ? 'Secretariat Authority' : 'Verified Member'}
+               </p>
+            </div>
+         </div>
 
-        {/* Quick Balance Section */}
-        <div className="px-6 -mt-10 relative z-20">
-           <div className="bg-white rounded-[2rem] p-6 shadow-2xl border border-gray-100 flex items-center justify-between group active:scale-95 transition-all cursor-pointer" onClick={() => navigate('/topup')}>
-              <div className="flex items-center gap-4">
-                 <div className="w-12 h-12 bg-red-50 text-[#ff0033] rounded-2xl flex items-center justify-center shadow-sm">
-                    <Wallet size={24} />
-                 </div>
-                 <div>
-                    <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Total Balance</p>
-                    <p className="text-2xl font-black text-gray-900 italic tracking-tighter shadow-black drop-shadow-sm">₹ {user?.balance?.toLocaleString() || '0.00'}</p>
-                 </div>
-              </div>
-              <div className="bg-[#ff0033] p-2 rounded-xl text-white shadow-lg group-hover:px-4 transition-all overflow-hidden flex items-center gap-1 group-hover:rotate-6">
-                 <span className="text-[10px] font-black uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">Add</span>
-                 <CreditCard size={18} fill="white" />
-              </div>
-           </div>
-        </div>
-
-        {/* Referral Section - New Feature */}
-        <div className="p-6">
-           <div className="bg-gray-950 rounded-[2.5rem] p-8 text-white relative overflow-hidden group shadow-xl">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-[#ff0033]/20 rounded-full blur-3xl group-hover:bg-[#ff0033]/40 transition-colors"></div>
-              <div className="relative z-10">
-                 <div className="flex items-center gap-3 mb-4">
-                    <Gift className="text-[#ff0033]" size={24} />
-                    <h3 className="text-xl font-black font-condensed uppercase tracking-tighter italic italic">Refer & Get Chips</h3>
-                 </div>
-                 <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest leading-relaxed mb-6">
-                    Invite your friends and both of you will receive <span className="text-white">BONUS CHIPS</span> to buy free tickets!
-                 </p>
-                 
-                 <div className="flex items-center gap-3 bg-white/5 p-4 rounded-2xl border border-white/10 group-hover:border-[#ff0033]/30 transition-all">
-                    <div className="flex-grow">
-                       <p className="text-[8px] font-black text-[#ff0033] uppercase tracking-widest mb-1">Your Referral Code</p>
-                       <p className="text-lg font-black tracking-tighter italic">DIAMOND777</p>
+         {/* Quick Balance Section - Hidden for Admins */}
+         {!isAdmin && (
+           <div className="px-6 -mt-10 relative z-20">
+              <div className="bg-white rounded-[2rem] p-6 shadow-2xl border border-gray-100 flex items-center justify-between group active:scale-95 transition-all cursor-pointer" onClick={() => navigate('/topup')}>
+                 <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-red-50 text-[#ff0033] rounded-2xl flex items-center justify-center shadow-sm">
+                       <Wallet size={24} />
                     </div>
-                    <button 
-                      onClick={handleCopyCode}
-                      className="bg-[#ff0033] p-3 rounded-xl text-white shadow-lg shadow-[#ff0033]/20 active:scale-95 transition-all"
-                    >
-                       <Copy size={18} />
-                    </button>
+                    <div>
+                       <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Total Balance</p>
+                       <p className="text-2xl font-black text-gray-900 italic tracking-tighter shadow-black drop-shadow-sm">₹ {user?.balance?.toLocaleString() || '0.00'}</p>
+                    </div>
+                 </div>
+                 <div className="bg-[#ff0033] p-2 rounded-xl text-white shadow-lg group-hover:px-4 transition-all overflow-hidden flex items-center gap-1 group-hover:rotate-6">
+                    <span className="text-[10px] font-black uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">Add</span>
+                    <CreditCard size={18} fill="white" />
                  </div>
               </div>
            </div>
-        </div>
+         )}
+
+         {/* Referral Section - Hidden for Admins */}
+         {!isAdmin && (
+           <div className="p-6">
+              <div className="bg-gray-950 rounded-[2.5rem] p-8 text-white relative overflow-hidden group shadow-xl">
+                 <div className="absolute top-0 right-0 w-32 h-32 bg-[#ff0033]/20 rounded-full blur-3xl group-hover:bg-[#ff0033]/40 transition-colors"></div>
+                 <div className="relative z-10">
+                    <div className="flex items-center gap-3 mb-4">
+                       <Gift className="text-[#ff0033]" size={24} />
+                       <h3 className="text-xl font-black font-condensed uppercase tracking-tighter italic italic">Refer & Get Chips</h3>
+                    </div>
+                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest leading-relaxed mb-6">
+                       Invite your friends and both of you will receive <span className="text-white">BONUS CHIPS</span> to buy free tickets!
+                    </p>
+                    
+                    <div className="flex items-center gap-3 bg-white/5 p-4 rounded-2xl border border-white/10 group-hover:border-[#ff0033]/30 transition-all">
+                       <div className="flex-grow">
+                          <p className="text-[8px] font-black text-[#ff0033] uppercase tracking-widest mb-1">Your Referral Code</p>
+                          <p className="text-lg font-black tracking-tighter italic">DIAMOND777</p>
+                       </div>
+                       <button 
+                         onClick={handleCopyCode}
+                         className="bg-[#ff0033] p-3 rounded-xl text-white shadow-lg shadow-[#ff0033]/20 active:scale-95 transition-all"
+                       >
+                          <Copy size={18} />
+                       </button>
+                    </div>
+                 </div>
+              </div>
+           </div>
+         )}
 
         {/* Menu Items */}
         <div className="p-4 py-6 space-y-4">
