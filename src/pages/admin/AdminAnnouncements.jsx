@@ -632,7 +632,7 @@ const AdminAnnouncements = () => {
                                onClick={() => setMonitorTier('ALL')}
                                className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all ${monitorTier === 'ALL' ? 'bg-gray-900 text-white shadow-md' : 'bg-gray-100 text-gray-400 hover:bg-gray-200'}`}
                              >
-                               All
+                                All
                              </button>
                              {tierOptions[monitorType].map(tier => (
                                 <button 
@@ -672,6 +672,7 @@ const AdminAnnouncements = () => {
                               <tr>
                                  <th className="px-6 py-4 text-[11px] font-black uppercase text-gray-600 tracking-widest border-2 border-[#ff0000] w-24">Rank</th>
                                  <th className="px-6 py-4 text-[11px] font-black uppercase text-gray-600 tracking-widest border-2 border-[#ff0000]"># Combination</th>
+                                 <th className="px-6 py-4 text-[11px] font-black uppercase text-gray-600 tracking-widest border-2 border-[#ff0000] w-32">Volume</th>
                               </tr>
                            </thead>
                            <tbody>
@@ -681,17 +682,17 @@ const AdminAnnouncements = () => {
                                    .filter(([_, count]) => count > 0)
                                    .sort((a, b) => b[1] - a[1])
                                    .slice(0, 15); // Top 15
- 
+
                                  if (sortedCombos.length === 0) {
                                    return (
                                      <tr>
-                                       <td colSpan="2" className="px-6 py-12 text-center text-gray-300 italic text-[11px] font-black uppercase tracking-widest border-2 border-[#ff0000]">
+                                       <td colSpan="3" className="px-6 py-12 text-center text-gray-300 italic text-[11px] font-black uppercase tracking-widest border-2 border-[#ff0000]">
                                          No high-frequency data available for this {monitorType} {monitorTier !== 'ALL' ? `Tier (₹${monitorTier})` : ''} slot yet
                                        </td>
                                      </tr>
                                    );
                                  }
- 
+
                                  return sortedCombos.map(([num, count], index) => {
                                    return (
                                      <tr key={num} className="group hover:bg-red-50/10 transition-all">
@@ -703,6 +704,12 @@ const AdminAnnouncements = () => {
                                            {num.split('').map((d, i) => (
                                              <span key={i} className="w-10 h-10 rounded-xl bg-white border-2 border-gray-100 flex items-center justify-center font-black text-xl italic text-gray-900 shadow-sm group-hover:border-red-600 transition-all">{d}</span>
                                            ))}
+                                         </div>
+                                       </td>
+                                       <td className="px-6 py-4 border-2 border-[#ff0000]">
+                                         <div className="flex flex-col">
+                                           <span className="text-sm font-black font-condensed italic text-red-600 tabular-nums">{count}</span>
+                                           <span className="text-[7px] font-black text-gray-400 uppercase tracking-widest">Tickets Purchased</span>
                                          </div>
                                        </td>
                                      </tr>
@@ -833,7 +840,7 @@ const AdminAnnouncements = () => {
                           <Trophy size={12} className="text-red-500" />
                           <p className="text-[10px] font-black text-gray-950 uppercase tracking-tighter">{getBrandBySlot(res.draw)} LOTTERY</p>
                        </div>
-                       <p className="text-[8px] font-bold text-gray-400 uppercase tracking-widest">Official Record ID: {res.id.toString().slice(-6)}</p>
+                       <p className="text-[8px] font-bold text-gray-400 uppercase tracking-widest">Official Record ID: {String(res.id || "").slice(-6)}</p>
                     </div>
                   </div>
 
