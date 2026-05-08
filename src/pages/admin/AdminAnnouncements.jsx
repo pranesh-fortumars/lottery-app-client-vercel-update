@@ -667,11 +667,11 @@ const AdminAnnouncements = () => {
                      </div>
                      
                      <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse border-2 border-gray-200">
+                        <table className="w-full text-left border-collapse border-2 border-[#ff0000]">
                            <thead className="bg-gray-100">
                               <tr>
-                                 <th className="px-6 py-4 text-[11px] font-black uppercase text-gray-600 tracking-widest border-2 border-gray-200 w-24">Rank</th>
-                                 <th className="px-6 py-4 text-[11px] font-black uppercase text-gray-600 tracking-widest border-2 border-gray-200"># Combination</th>
+                                 <th className="px-6 py-4 text-[11px] font-black uppercase text-gray-600 tracking-widest border-2 border-[#ff0000] w-24">Rank</th>
+                                 <th className="px-6 py-4 text-[11px] font-black uppercase text-gray-600 tracking-widest border-2 border-[#ff0000]"># Combination</th>
                               </tr>
                            </thead>
                            <tbody>
@@ -685,7 +685,7 @@ const AdminAnnouncements = () => {
                                  if (sortedCombos.length === 0) {
                                    return (
                                      <tr>
-                                       <td colSpan="2" className="px-6 py-12 text-center text-gray-300 italic text-[11px] font-black uppercase tracking-widest border-2 border-gray-200">
+                                       <td colSpan="2" className="px-6 py-12 text-center text-gray-300 italic text-[11px] font-black uppercase tracking-widest border-2 border-[#ff0000]">
                                          No high-frequency data available for this {monitorType} {monitorTier !== 'ALL' ? `Tier (₹${monitorTier})` : ''} slot yet
                                        </td>
                                      </tr>
@@ -695,10 +695,10 @@ const AdminAnnouncements = () => {
                                  return sortedCombos.map(([num, count], index) => {
                                    return (
                                      <tr key={num} className="group hover:bg-red-50/10 transition-all">
-                                       <td className="px-6 py-4 border-2 border-gray-200">
+                                       <td className="px-6 py-4 border-2 border-[#ff0000]">
                                          <span className="w-8 h-8 rounded-lg bg-gray-950 text-white flex items-center justify-center font-black italic shadow-md">#{index + 1}</span>
                                        </td>
-                                       <td className="px-6 py-4 border-2 border-gray-200">
+                                       <td className="px-6 py-4 border-2 border-[#ff0000]">
                                          <div className="flex gap-2">
                                            {num.split('').map((d, i) => (
                                              <span key={i} className="w-10 h-10 rounded-xl bg-white border-2 border-gray-100 flex items-center justify-center font-black text-xl italic text-gray-900 shadow-sm group-hover:border-red-600 transition-all">{d}</span>
@@ -738,14 +738,14 @@ const AdminAnnouncements = () => {
                    </div>
 
                    <div className="overflow-x-auto">
-                      <table className="w-full text-left border-collapse border-2 border-gray-200">
+                      <table className="w-full text-left border-collapse border-2 border-[#ff0000]">
                          <thead className="bg-gray-100">
                             <tr>
-                               <th className="px-6 py-4 text-[11px] font-black uppercase text-gray-600 tracking-widest border-2 border-gray-200 w-1/2"># Combination</th>
-                               <th className="px-6 py-4 text-[11px] font-black uppercase text-gray-600 tracking-widest text-center border-2 border-gray-200 w-1/2">Tickets Sold</th>
+                               <th className="px-6 py-4 text-[11px] font-black uppercase text-gray-600 tracking-widest border-2 border-[#ff0000] w-1/2"># Combination</th>
+                               <th className="px-6 py-4 text-[11px] font-black uppercase text-gray-600 tracking-widest text-center border-2 border-[#ff0000] w-1/2">Tickets Sold</th>
                             </tr>
                          </thead>
-                         <tbody className="divide-y-2 divide-gray-200">
+                         <tbody className="divide-y-2 divide-[#ff0000]">
                             {getNumberRange().map(num => {
                                const boardData = dynamicAnalyticFeed[showDetailSlot]?.dataStore?.[monitorType]?.[monitorBoard];
                                const count = boardData ? (boardData[num] || 0) : 0;
@@ -753,7 +753,7 @@ const AdminAnnouncements = () => {
 
                                return (
                                  <tr key={num} className={`group transition-all ${count > 0 ? 'bg-red-50/20' : 'bg-white hover:bg-gray-50'}`}>
-                                    <td className="px-6 py-4 border-2 border-gray-200">
+                                    <td className="px-6 py-4 border-2 border-[#ff0000]">
                                        <div className="flex items-center gap-4">
                                           <div className={`w-10 h-10 rounded-lg flex items-center justify-center font-black text-lg font-condensed italic transition-all ${count > 0 ? 'bg-red-600 text-white shadow-md' : 'bg-gray-50 text-gray-500 border border-gray-200'}`}>
                                              {num}
@@ -766,7 +766,7 @@ const AdminAnnouncements = () => {
                                           )}
                                        </div>
                                     </td>
-                                    <td className="px-6 py-4 border-2 border-gray-200">
+                                    <td className="px-6 py-4 border-2 border-[#ff0000]">
                                        <div className="flex flex-col items-center">
                                           <div className="flex items-baseline gap-1">
                                              <span className={`text-2xl font-black font-condensed italic tabular-nums leading-none ${count > 0 ? 'text-gray-950' : 'text-gray-400'}`}>
